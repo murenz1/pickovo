@@ -4,9 +4,11 @@ import { View, Text, StyleSheet, SafeAreaView, Image } from 'react-native';
 import Button from '../../components/Button';
 import { COLORS, SIZES } from '../../styles/theme';
 
-const AccountCreatedScreen = ({ navigation }) => {
-  // Get the signIn function from AuthContext
-  const { signIn } = useContext(AuthContext);
+const AccountCreatedScreen = ({ navigation, route }) => {
+  const { email } = route.params || {};
+  
+  // Get the auth functions from AuthContext
+  const { user } = useContext(AuthContext);
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
@@ -17,11 +19,16 @@ const AccountCreatedScreen = ({ navigation }) => {
         </View>
         
         <Text style={styles.title}>Your account was successfully created!</Text>
-        <Text style={styles.subtitle}>Only one click to explore online services.</Text>
+        <Text style={styles.subtitle}>
+          {email ? `We've sent a verification email to ${email}.` : 'Check your email for verification.'}
+        </Text>
         
         <Button 
-          title="Log in" 
-          onPress={() => signIn()}
+          title="Continue to App" 
+          onPress={() => navigation.reset({
+            index: 0,
+            routes: [{ name: 'Home' }],
+          })}
           style={styles.button}
         />
       </View>

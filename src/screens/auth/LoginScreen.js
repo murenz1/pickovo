@@ -1,6 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { AuthContext } from '../../../App';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Button from '../../components/Button';
 import Input from '../../components/Input';
@@ -10,28 +10,30 @@ import { COLORS, SIZES } from '../../styles/theme';
 const LoginScreen = ({ navigation, route }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [formError, setFormError] = useState('');
   const [loading, setLoading] = useState(false);
   const { welcomeBack } = route.params || { welcomeBack: false };
 
-  // Get the signIn function from AuthContext
-  const { signIn } = useContext(AuthContext);
+  // Get the auth functions from AuthContext
+  const { signIn, error: authError, clearError } = useContext(AuthContext);
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!email || !password) {
-      setError('Please enter both email and password');
+      setFormError('Please enter both email and password');
       return;
     }
     
     setLoading(true);
+    clearError();
     
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      // Use the signIn function from AuthContext to authenticate with Firebase
+      await signIn(email, password);
+      // If successful, the AuthContext will update the state and navigate to Home
+    } catch (err) {
       setLoading(false);
-      
-      // Use the signIn function from AuthContext to update auth state
-      signIn();
-    }, 1500);
+      setFormError(err.message || 'Failed to sign in. Please check your credentials.');
+    }
   };
 
   return (
@@ -59,7 +61,7 @@ const LoginScreen = ({ navigation, route }) => {
               value={email}
               onChangeText={(text) => {
                 setEmail(text);
-                if (error) setError('');
+                if (formError) setFormError('');
               }}
               keyboardType="email-address"
               autoCapitalize="none"
@@ -71,12 +73,13 @@ const LoginScreen = ({ navigation, route }) => {
               value={password}
               onChangeText={(text) => {
                 setPassword(text);
-                if (error) setError('');
+                if (formError) setFormError('');
               }}
               secureTextEntry
             />
             
-            {error ? <Text style={styles.errorText}>{error}</Text> : null}
+            {formError ? <Text style={styles.errorText}>{formError}</Text> : null}
+            {authError ? <Text style={styles.errorText}>{authError}</Text> : null}
             
             <Button 
               title="Log in" 
@@ -108,19 +111,25 @@ const LoginScreen = ({ navigation, route }) => {
             
             <SocialButton 
               provider="Apple" 
-              onPress={() => {}} 
+              onPress={() => {
+                Alert.alert('Coming Soon', 'Sign in with Apple will be available soon!');
+              }} 
               style={styles.socialButton}
             />
             
             <SocialButton 
               provider="Facebook" 
-              onPress={() => {}} 
+              onPress={() => {
+                Alert.alert('Coming Soon', 'Sign in with Facebook will be available soon!');
+              }} 
               style={styles.socialButton}
             />
             
             <SocialButton 
               provider="Google" 
-              onPress={() => {}} 
+              onPress={() => {
+                Alert.alert('Coming Soon', 'Sign in with Google will be available soon!');
+              }} 
               style={styles.socialButton}
             />
           </>

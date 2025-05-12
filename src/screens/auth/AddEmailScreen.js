@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { AuthContext } from '../../../App';
 import Button from '../../components/Button';
 import Input from '../../components/Input';
 import { COLORS, SIZES } from '../../styles/theme';
@@ -8,13 +9,17 @@ import { COLORS, SIZES } from '../../styles/theme';
 const AddEmailScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  
+  // Get the auth context
+  const { clearError } = useContext(AuthContext);
 
   const validateEmail = (email) => {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return regex.test(email);
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (!email) {
       setError('Email is required');
       return;
@@ -25,8 +30,21 @@ const AddEmailScreen = ({ navigation }) => {
       return;
     }
     
+    setLoading(true);
     setError('');
-    navigation.navigate('VerifyEmail', { email });
+    clearError();
+    
+    // In a real implementation, you might want to check if the email already exists
+    // For now, we'll just proceed to the next step
+    
+    try {
+      // Navigate to the next screen with the email
+      navigation.navigate('CreatePassword', { email });
+    } catch (err) {
+      setError(err.message || 'An error occurred. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -60,9 +78,10 @@ const AddEmailScreen = ({ navigation }) => {
           />
           
           <Button 
-            title="Create an account" 
+            title="Continue" 
             onPress={handleContinue}
-            disabled={!email}
+            disabled={!email || loading}
+            loading={loading}
             style={styles.button}
           />
         </View>

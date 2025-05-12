@@ -1,15 +1,22 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
+import React, { useState, useContext } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { AuthContext } from '../../../App';
 import Button from '../../components/Button';
 import Input from '../../components/Input';
 import { COLORS, SIZES } from '../../styles/theme';
 
-const CreatePasswordScreen = ({ navigation }) => {
+const CreatePasswordScreen = ({ navigation, route }) => {
+  const { email } = route.params || {};
   const [password, setPassword] = useState('');
   const [hasMinLength, setHasMinLength] = useState(false);
   const [hasNumber, setHasNumber] = useState(false);
   const [hasSymbol, setHasSymbol] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  
+  // Get the signUp function from AuthContext
+  const { signUp, clearError } = useContext(AuthContext);
 
   const validatePassword = (text) => {
     setPassword(text);
@@ -20,9 +27,28 @@ const CreatePasswordScreen = ({ navigation }) => {
 
   const isPasswordValid = hasMinLength && hasNumber && hasSymbol;
 
-  const handleContinue = () => {
-    if (isPasswordValid) {
-      navigation.navigate('AccountCreated');
+  const handleContinue = async () => {
+    if (!isPasswordValid) return;
+    
+    if (!email) {
+      setError('Email is missing. Please go back and enter your email.');
+      return;
+    }
+    
+    setLoading(true);
+    clearError();
+    
+    try {
+      // Register the user with Firebase
+      await signUp(email, password);
+      
+      // Navigate to account created screen
+      navigation.navigate('AccountCreated', { email });
+    } catch (err) {
+      setError(err.message || 'Failed to create account. Please try again.');
+      Alert.alert('Registration Error', err.message || 'Failed to create account. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -91,10 +117,13 @@ const CreatePasswordScreen = ({ navigation }) => {
           </View>
         </View>
         
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+        
         <Button 
-          title="Continue" 
+          title="Create Account" 
           onPress={handleContinue}
-          disabled={!isPasswordValid}
+          disabled={!isPasswordValid || loading}
+          loading={loading}
           style={styles.button}
         />
       </View>

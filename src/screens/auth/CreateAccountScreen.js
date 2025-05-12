@@ -1,11 +1,14 @@
-import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
+import React, { useContext } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { AuthContext } from '../../../App';
 import Button from '../../components/Button';
 import SocialButton from '../../components/SocialButton';
 import { COLORS, SIZES } from '../../styles/theme';
 
 const CreateAccountScreen = ({ navigation }) => {
+  // Get the auth context
+  const { clearError } = useContext(AuthContext);
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -37,19 +40,28 @@ const CreateAccountScreen = ({ navigation }) => {
         
         <SocialButton 
           provider="Apple" 
-          onPress={() => {}} 
+          onPress={() => {
+            clearError();
+            Alert.alert('Coming Soon', 'Sign up with Apple will be available soon!');
+          }} 
           style={styles.socialButton}
         />
         
         <SocialButton 
           provider="Facebook" 
-          onPress={() => {}} 
+          onPress={() => {
+            clearError();
+            Alert.alert('Coming Soon', 'Sign up with Facebook will be available soon!');
+          }} 
           style={styles.socialButton}
         />
         
         <SocialButton 
           provider="Google" 
-          onPress={() => {}} 
+          onPress={() => {
+            clearError();
+            Alert.alert('Coming Soon', 'Sign up with Google will be available soon!');
+          }} 
           style={styles.socialButton}
         />
       </View>

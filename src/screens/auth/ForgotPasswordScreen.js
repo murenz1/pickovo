@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ActivityIndicator, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { AuthContext } from '../../../App';
 import { COLORS, SIZES } from '../../styles/theme';
 import Button from '../../components/Button';
 
@@ -8,8 +9,11 @@ const ForgotPasswordScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [step, setStep] = useState('input'); // input, processing, success
   const [error, setError] = useState('');
+  
+  // Get resetPassword function from AuthContext
+  const { resetPassword } = useContext(AuthContext);
 
-  const handleResetPassword = () => {
+  const handleResetPassword = async () => {
     if (!email || !email.includes('@')) {
       setError('Please enter a valid email address');
       return;
@@ -18,10 +22,14 @@ const ForgotPasswordScreen = ({ navigation }) => {
     setError('');
     setStep('processing');
     
-    // Simulate API call for password reset
-    setTimeout(() => {
+    try {
+      // Call Firebase password reset function
+      await resetPassword(email);
       setStep('success');
-    }, 2000);
+    } catch (err) {
+      setStep('input');
+      setError(err.message || 'Failed to send password reset email. Please try again.');
+    }
   };
 
   const renderInputStep = () => (
