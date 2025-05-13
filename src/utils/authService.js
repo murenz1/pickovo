@@ -1,25 +1,39 @@
-import { 
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  sendPasswordResetEmail,
-  sendEmailVerification,
-  updateProfile,
-  signOut,
-  GoogleAuthProvider,
-  FacebookAuthProvider,
-  OAuthProvider,
-  signInWithCredential
-} from 'firebase/auth';
-import { auth } from './firebase';
+import { Platform } from 'react-native';
+import { auth, platformInfo } from './firebase';
+
+// Import web Firebase auth methods if on web platform
+let webAuth = {};
+if (Platform.OS === 'web') {
+  webAuth = require('firebase/auth');
+}
+
+// Helper to determine if we're using native Firebase
+const isNativeFirebase = platformInfo.usingNativeFirebase;
 
 // User registration with email and password
 export const registerWithEmailAndPassword = async (email, password) => {
   try {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    // Send email verification
-    await sendEmailVerification(userCredential.user);
+    let userCredential;
+    
+    if (isNativeFirebase) {
+      // React Native Firebase implementation
+      userCredential = await auth.createUserWithEmailAndPassword(email, password);
+      // Send email verification if needed
+      if (userCredential.user) {
+        await userCredential.user.sendEmailVerification();
+      }
+    } else {
+      // Web Firebase implementation
+      userCredential = await webAuth.createUserWithEmailAndPassword(auth, email, password);
+      // Send email verification
+      if (userCredential.user) {
+        await webAuth.sendEmailVerification(userCredential.user);
+      }
+    }
+    
     return userCredential.user;
   } catch (error) {
+    console.error('Registration error:', error);
     throw error;
   }
 };
@@ -28,15 +42,27 @@ export const registerWithEmailAndPassword = async (email, password) => {
 export const updateUserProfile = async (displayName, photoURL = null) => {
   try {
     const user = auth.currentUser;
-    if (user) {
-      await updateProfile(user, {
+    if (!user) {
+      throw new Error('No user is signed in');
+    }
+    
+    if (isNativeFirebase) {
+      // React Native Firebase implementation
+      await user.updateProfile({
         displayName,
         photoURL
       });
-      return user;
+    } else {
+      // Web Firebase implementation
+      await webAuth.updateProfile(user, {
+        displayName,
+        photoURL
+      });
     }
-    throw new Error('No user is signed in');
+    
+    return user;
   } catch (error) {
+    console.error('Update profile error:', error);
     throw error;
   }
 };
@@ -44,9 +70,19 @@ export const updateUserProfile = async (displayName, photoURL = null) => {
 // Sign in with email and password
 export const signInWithEmail = async (email, password) => {
   try {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    let userCredential;
+    
+    if (isNativeFirebase) {
+      // React Native Firebase implementation
+      userCredential = await auth.signInWithEmailAndPassword(email, password);
+    } else {
+      // Web Firebase implementation
+      userCredential = await webAuth.signInWithEmailAndPassword(auth, email, password);
+    }
+    
     return userCredential.user;
   } catch (error) {
+    console.error('Sign in error:', error);
     throw error;
   }
 };
@@ -54,9 +90,16 @@ export const signInWithEmail = async (email, password) => {
 // Sign out user
 export const logoutUser = async () => {
   try {
-    await signOut(auth);
+    if (isNativeFirebase) {
+      // React Native Firebase implementation
+      await auth.signOut();
+    } else {
+      // Web Firebase implementation
+      await webAuth.signOut(auth);
+    }
     return true;
   } catch (error) {
+    console.error('Sign out error:', error);
     throw error;
   }
 };
@@ -64,9 +107,16 @@ export const logoutUser = async () => {
 // Send password reset email
 export const resetPassword = async (email) => {
   try {
-    await sendPasswordResetEmail(auth, email);
+    if (isNativeFirebase) {
+      // React Native Firebase implementation
+      await auth.sendPasswordResetEmail(email);
+    } else {
+      // Web Firebase implementation
+      await webAuth.sendPasswordResetEmail(auth, email);
+    }
     return true;
   } catch (error) {
+    console.error('Reset password error:', error);
     throw error;
   }
 };
@@ -121,5 +171,12 @@ export const signInWithApple = async (idToken, nonce) => {
 
 // Auth state listener
 export const onAuthStateChanged = (callback) => {
-  return auth.onAuthStateChanged(callback);
+  try {
+    // Both implementations use similar API for auth state changes
+    return auth.onAuthStateChanged(callback);
+  } catch (error) {
+    console.error('Auth state listener error:', error);
+    // Return a dummy unsubscribe function if it fails
+    return () => {};
+  }
 };

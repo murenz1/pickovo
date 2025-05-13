@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, Button } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { COLORS, SIZES } from '../styles/theme';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -14,7 +15,7 @@ class ErrorBoundary extends React.Component {
 
   componentDidCatch(error, errorInfo) {
     // You can also log the error to an error reporting service
-    console.log('Error caught by ErrorBoundary:', error, errorInfo);
+    console.error("ErrorBoundary caught an error", error, errorInfo);
     this.setState({
       error: error,
       errorInfo: errorInfo
@@ -27,13 +28,14 @@ class ErrorBoundary extends React.Component {
       return (
         <View style={styles.container}>
           <Text style={styles.title}>Something went wrong</Text>
-          <Text style={styles.errorText}>
-            {this.state.error && this.state.error.toString()}
+          <Text style={styles.message}>
+            The application encountered an unexpected error. Please try again later.
           </Text>
-          <Button 
-            title="Try Again" 
-            onPress={() => this.setState({ hasError: false })} 
-          />
+          {this.state.error && (
+            <Text style={styles.errorText}>
+              {this.state.error.toString()}
+            </Text>
+          )}
         </View>
       );
     }
@@ -48,16 +50,23 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
-    backgroundColor: '#f8f8f8',
+    backgroundColor: COLORS.background,
   },
   title: {
-    fontSize: 20,
+    fontSize: SIZES.large,
     fontWeight: 'bold',
+    color: COLORS.error,
     marginBottom: 10,
   },
-  errorText: {
-    color: 'red',
+  message: {
+    fontSize: SIZES.medium,
+    color: COLORS.text,
+    textAlign: 'center',
     marginBottom: 20,
+  },
+  errorText: {
+    fontSize: SIZES.small,
+    color: COLORS.textSecondary,
     textAlign: 'center',
   },
 });

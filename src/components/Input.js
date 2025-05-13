@@ -1,20 +1,37 @@
 import React, { useState } from 'react';
 import { View, TextInput, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { COLORS, SIZES } from '../styles/theme';
 import { Ionicons } from '@expo/vector-icons';
+import { COLORS, SIZES } from '../styles/theme';
 
 const Input = ({
   label,
-  placeholder,
   value,
   onChangeText,
+  placeholder,
   secureTextEntry,
+  keyboardType,
+  autoCapitalize = 'sentences',
   error,
   style,
-  ...props
+  multiline = false,
+  numberOfLines = 1,
+  editable = true,
+  onFocus,
+  onBlur,
+  maxLength,
 }) => {
-  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+
+  const handleFocus = (e) => {
+    setIsFocused(true);
+    if (onFocus) onFocus(e);
+  };
+
+  const handleBlur = (e) => {
+    setIsFocused(false);
+    if (onBlur) onBlur(e);
+  };
 
   const togglePasswordVisibility = () => {
     setIsPasswordVisible(!isPasswordVisible);
@@ -23,24 +40,38 @@ const Input = ({
   return (
     <View style={[styles.container, style]}>
       {label && <Text style={styles.label}>{label}</Text>}
-      <View style={[
-        styles.inputContainer,
-        isFocused && styles.focusedInput,
-        error && styles.errorInput
-      ]}>
+      <View
+        style={[
+          styles.inputContainer,
+          isFocused && styles.focusedInput,
+          error && styles.errorInput,
+          !editable && styles.disabledInput,
+        ]}
+      >
         <TextInput
-          style={styles.input}
-          placeholder={placeholder}
+          style={[
+            styles.input,
+            multiline && { textAlignVertical: 'top' },
+          ]}
           value={value}
           onChangeText={onChangeText}
+          placeholder={placeholder}
+          placeholderTextColor={COLORS.textSecondary}
           secureTextEntry={secureTextEntry && !isPasswordVisible}
-          placeholderTextColor={COLORS.placeholder}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
-          {...props}
+          keyboardType={keyboardType}
+          autoCapitalize={autoCapitalize}
+          multiline={multiline}
+          numberOfLines={multiline ? numberOfLines : 1}
+          editable={editable}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
+          maxLength={maxLength}
         />
         {secureTextEntry && (
-          <TouchableOpacity onPress={togglePasswordVisibility} style={styles.eyeIcon}>
+          <TouchableOpacity 
+            style={styles.iconButton} 
+            onPress={togglePasswordVisibility}
+          >
             <Ionicons 
               name={isPasswordVisible ? 'eye-off-outline' : 'eye-outline'} 
               size={24} 
@@ -49,7 +80,7 @@ const Input = ({
           </TouchableOpacity>
         )}
       </View>
-      {error && <Text style={styles.errorText}>{error}</Text>}
+      {error ? <Text style={styles.errorText}>{error}</Text> : null}
     </View>
   );
 };
@@ -61,8 +92,9 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: SIZES.medium,
-    marginBottom: 8,
     color: COLORS.text,
+    marginBottom: SIZES.base,
+    fontWeight: '500',
   },
   inputContainer: {
     flexDirection: 'row',
@@ -71,13 +103,15 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
     borderRadius: SIZES.radius,
     backgroundColor: COLORS.background,
+    paddingHorizontal: SIZES.padding,
+    height: 56,
   },
   input: {
     flex: 1,
-    height: 56,
-    paddingHorizontal: SIZES.padding,
-    fontSize: SIZES.medium,
     color: COLORS.text,
+    fontSize: SIZES.medium,
+    height: '100%',
+    paddingVertical: SIZES.padding,
   },
   focusedInput: {
     borderColor: COLORS.primary,
@@ -85,13 +119,16 @@ const styles = StyleSheet.create({
   errorInput: {
     borderColor: COLORS.error,
   },
+  disabledInput: {
+    backgroundColor: COLORS.border + '20', // 20% opacity
+  },
+  iconButton: {
+    padding: SIZES.base,
+  },
   errorText: {
     color: COLORS.error,
     fontSize: SIZES.small,
-    marginTop: 4,
-  },
-  eyeIcon: {
-    padding: SIZES.padding,
+    marginTop: SIZES.base,
   },
 });
 

@@ -16,7 +16,11 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.fixmyride"
+      "bundleIdentifier": "com.fixmyride",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "This app uses your location to show you nearby repair shops and services.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "This app uses your location to show you nearby repair shops and services."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -24,7 +28,8 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.fixmyride",
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "permissions": ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION"]
     },
     "web": {
       "favicon": "./assets/favicon.png"

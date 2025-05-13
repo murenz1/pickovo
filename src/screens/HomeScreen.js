@@ -1,222 +1,362 @@
-import React, { useContext, useState } from 'react';
-import { AuthContext } from '../../App';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, TextInput, Dimensions, StatusBar, Platform, Image } from 'react-native';
-import { Ionicons, FontAwesome, MaterialIcons } from '@expo/vector-icons';
+import React, { useState, useRef, useEffect } from 'react';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  SafeAreaView, 
+  TouchableOpacity, 
+  TextInput, 
+  Image, 
+  ScrollView,
+  Dimensions,
+  Animated,
+  PanResponder,
+  FlatList,
+  StatusBar
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 import { COLORS, SIZES } from '../styles/theme';
 import Button from '../components/Button';
 
-// Import our custom MapView component that works everywhere including web
-import CustomMapView from '../components/CustomMapView';
-
-// Sample data for repair shops
+// Sample data for repair shops (these will be shown as markers on the map)
 const repairShops = [
-  { id: 1, coordinate: { latitude: 40.7128, longitude: -74.0060 }, name: 'Yvoon Car Repair', rating: 5.0, type: 'Repair Shop', distance: '2.8 km' },
-  { id: 2, coordinate: { latitude: 40.7328, longitude: -73.9860 }, name: 'Quick Fix Auto', rating: 4.7, type: 'Repair Shop', distance: '3.2 km' },
-  { id: 3, coordinate: { latitude: 40.7028, longitude: -73.9860 }, name: 'Pro Mechanics', rating: 4.5, type: 'Repair Shop', distance: '1.5 km' },
-  { id: 4, coordinate: { latitude: 40.7228, longitude: -74.0160 }, name: 'City Garage', rating: 4.8, type: 'Repair Shop', distance: '4.1 km' },
-  { id: 5, coordinate: { latitude: 40.7328, longitude: -74.0260 }, name: 'AutoFix Center', rating: 4.6, type: 'Repair Shop', distance: '3.7 km' },
-  { id: 6, coordinate: { latitude: 40.6928, longitude: -73.9960 }, name: 'Express Repairs', rating: 4.9, type: 'Repair Shop', distance: '2.3 km' },
-  { id: 7, coordinate: { latitude: 40.7428, longitude: -73.9760 }, name: 'Master Mechanics', rating: 4.4, type: 'Repair Shop', distance: '5.2 km' },
+  {
+    id: 1,
+    name: 'Yvoon Car Repair',
+    rating: 5.0,
+    type: 'Repair Shop',
+    distance: '2.8 km',
+    image: require('../assets/images/launch-screen.jpg'),
+    address: 'Norrsken Kigali House, 1 KN 78 St',
+    openTime: 'Open',
+    closeTime: 'Closes 22:00',
+    reviews: 206
+  },
+  {
+    id: 2,
+    name: 'Kigali Auto Garage',
+    rating: 4.8,
+    type: 'Garage',
+    distance: '3.2 km',
+    image: require('../assets/images/launch-screen.jpg'),
+    address: 'KK 15 Ave, Kigali',
+    openTime: 'Open',
+    closeTime: 'Closes 20:00',
+    reviews: 184
+  },
+  {
+    id: 3,
+    name: 'Rwanda Motors',
+    rating: 4.5,
+    type: 'Service Center',
+    distance: '4.0 km',
+    image: require('../assets/images/launch-screen.jpg'),
+    address: 'KG 7 Ave, Kigali',
+    openTime: 'Open',
+    closeTime: 'Closes 21:00',
+    reviews: 156
+  },
+  {
+    id: 4,
+    name: 'AutoFix Rwanda',
+    rating: 4.7,
+    type: 'Repair Shop',
+    distance: '1.5 km',
+    image: require('../assets/images/launch-screen.jpg'),
+    address: 'KN 5 Rd, Kigali',
+    openTime: 'Open',
+    closeTime: 'Closes 19:00',
+    reviews: 132
+  },
+  {
+    id: 5,
+    name: 'Kigali Mechanics',
+    rating: 4.2,
+    type: 'Garage',
+    distance: '5.1 km',
+    image: require('../assets/images/launch-screen.jpg'),
+    address: 'KK 3 Ave, Kigali',
+    openTime: 'Open',
+    closeTime: 'Closes 18:00',
+    reviews: 98
+  }
 ];
 
-// Sample data for recently visited shops
+// Sample data for recently visited
 const recentlyVisited = [
-  { id: 1, name: 'Yvoon Car Repair', image: require('../assets/images/launch-screen.jpg'), rating: 5.0, type: 'Repair Shop', distance: '2.8 km', daysAgo: 2 },
+  {
+    id: 1,
+    name: 'Yvoon Car Repair',
+    rating: 5.0,
+    type: 'Repair Shop',
+    distance: '2.8 km',
+    image: require('../assets/images/launch-screen.jpg'),
+    daysAgo: 2,
+    address: 'Norrsken Kigali House, 1 KN 78 St',
+    openTime: 'Open',
+    closeTime: 'Closes 22:00',
+    reviews: 206
+  },
+  {
+    id: 2,
+    name: 'Kigali Auto Garage',
+    rating: 4.8,
+    type: 'Garage',
+    distance: '3.2 km',
+    image: require('../assets/images/launch-screen.jpg'),
+    daysAgo: 5,
+    address: 'KK 15 Ave, Kigali',
+    openTime: 'Open',
+    closeTime: 'Closes 20:00',
+    reviews: 184
+  },
+  {
+    id: 3,
+    name: 'Rwanda Motors',
+    rating: 4.5,
+    type: 'Service Center',
+    distance: '4.0 km',
+    image: require('../assets/images/launch-screen.jpg'),
+    daysAgo: 7,
+    address: 'KG 7 Ave, Kigali',
+    openTime: 'Open',
+    closeTime: 'Closes 21:00',
+    reviews: 156
+  }
 ];
 
 const HomeScreen = () => {
-  // Get the signOut function from AuthContext
-  const { signOut } = useContext(AuthContext);
-  const [selectedShop, setSelectedShop] = useState(null);
-  const [showShopDetails, setShowShopDetails] = useState(false);
+  const navigation = useNavigation();
+  const screenHeight = Dimensions.get('window').height;
+  const [isBottomSheetExpanded, setIsBottomSheetExpanded] = useState(false);
   
-  // Handler for when a shop is selected from the map
-  const handleShopSelect = (shop) => {
-    setSelectedShop(shop);
-    setShowShopDetails(true);
+  // Bottom sheet animation
+  const bottomSheetHeight = useRef(new Animated.Value(180)).current;
+  const bottomSheetMinHeight = 180;
+  const bottomSheetMaxHeight = screenHeight * 0.5;
+  
+  // Pan responder for bottom sheet
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onPanResponderMove: (_, gestureState) => {
+        if (isBottomSheetExpanded) {
+          // If expanded, allow dragging down
+          if (gestureState.dy > 0) {
+            const newHeight = bottomSheetMaxHeight - gestureState.dy;
+            if (newHeight >= bottomSheetMinHeight) {
+              bottomSheetHeight.setValue(newHeight);
+            }
+          }
+        } else {
+          // If collapsed, allow dragging up
+          if (gestureState.dy < 0) {
+            const newHeight = bottomSheetMinHeight - gestureState.dy;
+            if (newHeight <= bottomSheetMaxHeight) {
+              bottomSheetHeight.setValue(newHeight);
+            }
+          }
+        }
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (isBottomSheetExpanded) {
+          // If dragging down and past threshold, collapse
+          if (gestureState.dy > 50) {
+            toggleBottomSheet();
+          } else {
+            // Spring back to expanded state
+            Animated.spring(bottomSheetHeight, {
+              toValue: bottomSheetMaxHeight,
+              useNativeDriver: false,
+            }).start();
+          }
+        } else {
+          // If dragging up and past threshold, expand
+          if (gestureState.dy < -50) {
+            toggleBottomSheet();
+          } else {
+            // Spring back to collapsed state
+            Animated.spring(bottomSheetHeight, {
+              toValue: bottomSheetMinHeight,
+              useNativeDriver: false,
+            }).start();
+          }
+        }
+      },
+    })
+  ).current;
+  
+  // Function to toggle bottom sheet state
+  const toggleBottomSheet = () => {
+    Animated.spring(bottomSheetHeight, {
+      toValue: isBottomSheetExpanded ? bottomSheetMinHeight : bottomSheetMaxHeight,
+      useNativeDriver: false,
+    }).start();
+    setIsBottomSheetExpanded(!isBottomSheetExpanded);
   };
   
-  // Render map using our custom MapView component
-  const renderMap = () => {
-    return (
-      <CustomMapView
-        repairShops={repairShops}
-        onMarkerPress={handleShopSelect}
-      />
-    );
+  // Navigate to shop details
+  const navigateToShopDetails = (shop) => {
+    navigation.navigate('ShopDetails', { shop });
   };
-
+  
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" />
       
-      {/* Map View */}
-      {renderMap()}
-      
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <View style={styles.searchBar}>
+      {/* Map Section */}
+      <View style={[styles.mapContainer, { height: '85%' }]}>
+        {/* Search Bar */}
+        <TouchableOpacity 
+          style={styles.searchBar}
+          activeOpacity={0.7}
+          onPress={() => navigation.navigate('Search')}
+        >
           <Ionicons name="search" size={20} color={COLORS.textSecondary} style={styles.searchIcon} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search here"
-            placeholderTextColor={COLORS.textSecondary}
+          <Text style={[styles.searchInput, { color: COLORS.textSecondary }]}>
+            Search here
+          </Text>
+          <TouchableOpacity style={styles.profilePic}>
+            <Image 
+              source={require('../assets/images/profile-pic.jpg')} 
+              style={styles.profileImage}
+              defaultSource={require('../assets/images/profile-pic.jpg')}
+            />
+          </TouchableOpacity>
+        </TouchableOpacity>
+        
+        {/* Google Maps Embed */}
+        {Platform.OS === 'web' ? (
+          <iframe
+            src="https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d15950.311167906126!2d30.1742849!3d-1.9822917!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sen!2sus!4v1620000000000!5m2!1sen!2sus"
+            width="100%"
+            height="100%"
+            style={{ border: 0, position: 'absolute', top: 0, left: 0 }}
+            allowFullScreen=""
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+          ></iframe>
+        ) : (
+          <View style={styles.mapPlaceholder}>
+            <Text>Map will load on mobile devices</Text>
+          </View>
+        )}
+      </View>
+      
+      {/* Bottom Sheet */}
+      <Animated.View 
+        style={[styles.bottomSheet, { height: bottomSheetHeight }]}
+        {...panResponder.panHandlers}
+      >
+        <TouchableOpacity 
+          style={styles.bottomSheetHeader}
+          onPress={toggleBottomSheet}
+          activeOpacity={0.8}
+        >
+          <View style={styles.bottomSheetHandle} />
+          <Text style={styles.bottomSheetTitle}>Recently Visited</Text>
+          <Ionicons 
+            name={isBottomSheetExpanded ? "chevron-down" : "chevron-up"} 
+            size={20} 
+            color={COLORS.textSecondary} 
           />
-          <View style={styles.profilePic}>
+        </TouchableOpacity>
+        
+        {/* User Info */}
+        <View style={styles.userInfoContainer}>
+          <View style={styles.userInfo}>
             <Image 
               source={require('../assets/images/launch-screen.jpg')} 
-              style={styles.profileImage} 
-              resizeMode="cover"
+              style={styles.userAvatar}
+              defaultSource={require('../assets/images/launch-screen.jpg')}
             />
+            <View>
+              <Text style={styles.userName}>Yvoon Benjamin</Text>
+              <View style={styles.userReviews}>
+                <Ionicons name="star" size={14} color="#FFB800" />
+                <Text style={styles.reviewText}>24 reviews in NY</Text>
+              </View>
+            </View>
           </View>
         </View>
-      </View>
-      
-      {/* User location indicator (orange arrow) */}
-      <View style={styles.userLocationContainer}>
-        <View style={styles.userLocationArrow} />
-      </View>
-      
-      {/* Shop Details Panel - shows when a shop is selected */}
-      {showShopDetails && selectedShop && (
-        <View style={styles.shopDetailsPanel}>
-          <View style={styles.shopDetailsPanelHeader}>
-            <Text style={styles.shopDetailsPanelTitle}>{selectedShop.name}</Text>
-            <TouchableOpacity onPress={() => setShowShopDetails(false)}>
-              <Ionicons name="close" size={24} color={COLORS.text} />
+        
+        {/* Recently Visited Shop */}
+        <View style={styles.recentVisitContainer}>
+          <Text style={styles.daysAgoText}>{recentlyVisited[0].daysAgo} days ago</Text>
+          
+          {/* Shop Image */}
+          <TouchableOpacity 
+            style={styles.shopImageLargeContainer}
+            onPress={() => navigateToShopDetails(recentlyVisited[0])}
+            activeOpacity={0.9}
+          >
+            <Image 
+              source={recentlyVisited[0].image} 
+              style={styles.shopImageLarge}
+              resizeMode="cover"
+            />
+          </TouchableOpacity>
+          
+          {/* Action Buttons */}
+          <View style={styles.actionsRow}>
+            <TouchableOpacity style={styles.likeButton}>
+              <Ionicons name="thumbs-up-outline" size={24} color={COLORS.primary} />
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.moreButton}>
+              <Ionicons name="ellipsis-horizontal" size={24} color={COLORS.textSecondary} />
             </TouchableOpacity>
           </View>
           
-          <View style={styles.shopDetailsContent}>
-            <View style={styles.shopDetailsRow}>
-              <View style={styles.shopRatingContainer}>
-                <Text style={styles.shopRatingText}>{selectedShop.rating}</Text>
-                <Ionicons name="star" size={16} color="#FFB800" />
-              </View>
-              <Text style={styles.shopTypeText}>{selectedShop.type}</Text>
-              <Text style={styles.shopDistanceText}>{selectedShop.distance}</Text>
-            </View>
-            
-            <View style={styles.shopDetailsButtonContainer}>
-              <TouchableOpacity style={styles.shopDetailsButton}>
-                <Ionicons name="call" size={18} color={COLORS.background} />
-                <Text style={styles.shopDetailsButtonText}>Call</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.shopDetailsButton}>
-                <Ionicons name="navigate" size={18} color={COLORS.background} />
-                <Text style={styles.shopDetailsButtonText}>Directions</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.shopDetailsButton}>
-                <Ionicons name="calendar" size={18} color={COLORS.background} />
-                <Text style={styles.shopDetailsButtonText}>Book</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      )}
-      
-      {/* Bottom Sheet */}
-      <View style={[styles.bottomSheet, showShopDetails && {display: 'none'}]}>
-        <View style={styles.bottomSheetHeader}>
-          {/* Orange indicator line */}
-          <View style={styles.orangeIndicator} />
-        </View>
-        
-        <View style={styles.bottomSheetContent}>
-          <Text style={styles.bottomSheetTitle}>Recently Visit</Text>
-          
-          {/* Shop info card */}
-          <View style={styles.recentItem}>
-            {/* User info section */}
-            <View style={styles.userInfoContainer}>
-              <View style={styles.userInfo}>
-                <Image 
-                  source={require('../assets/images/launch-screen.jpg')} 
-                  style={styles.userAvatar} 
-                />
-                <View>
-                  <Text style={styles.userName}>Yvona Benjamin</Text>
-                  <View style={styles.userReviews}>
-                    <MaterialIcons name="location-city" size={12} color="#4A89F3" />
-                    <Text style={styles.reviewText}>24 reviews in NY</Text>
-                  </View>
-                </View>
-              </View>
-              <Text style={styles.daysAgo}>2 days ago</Text>
-            </View>
-            
-            {/* Shop image */}
-            <View style={styles.shopImageContainer}>
-              <Image 
-                source={require('../assets/images/launch-screen.jpg')} 
-                style={styles.shopImage} 
-                resizeMode="cover"
-              />
-            </View>
-            
-            {/* Shop info */}
-            <View style={styles.shopInfoCard}>
-              <Text style={styles.shopName}>Yvoon Car Repair</Text>
-              <View style={styles.shopDetails}>
-                <View style={styles.ratingContainer}>
-                  <Text style={styles.ratingText}>5.0</Text>
-                  <Ionicons name="star" size={12} color="#FFD700" />
-                </View>
-                <Text style={styles.shopType}> • Repair Shop</Text>
-                <Text style={styles.shopDistance}> • 2.8 km</Text>
+          {/* Shop Info Card */}
+          <TouchableOpacity 
+            style={styles.shopInfoCardLarge}
+            onPress={() => navigateToShopDetails(recentlyVisited[0])}
+            activeOpacity={0.7}
+          >
+            <View style={styles.shopInfoContent}>
+              <Text style={styles.shopNameLarge}>{recentlyVisited[0].name}</Text>
+              <View style={styles.shopDetailsRow}>
+                <Text style={styles.ratingTextLarge}>{recentlyVisited[0].rating.toFixed(1)}</Text>
+                <Ionicons name="star" size={16} color="#FFB800" style={styles.starIcon} />
+                <Text style={styles.shopTypeLarge}> • {recentlyVisited[0].type}</Text>
+                <Text style={styles.shopDistanceLarge}> • {recentlyVisited[0].distance}</Text>
               </View>
             </View>
-            
-            {/* Action buttons */}
-            <View style={styles.actionButtons}>
-              <TouchableOpacity style={styles.actionButton}>
-                <Ionicons name="thumbs-up-outline" size={24} color="#666" />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.actionButton}>
-                <Ionicons name="ellipsis-vertical" size={24} color="#666" />
-              </TouchableOpacity>
-            </View>
-          </View>
+          </TouchableOpacity>
         </View>
-      </View>
-      
-      {/* Logout button - hidden but keeping the functionality */}
-      <TouchableOpacity 
-        style={styles.logoutButton}
-        onPress={() => signOut()}
-      >
-        <Ionicons name="log-out-outline" size={24} color={COLORS.background} />
-      </TouchableOpacity>
-    </View>
+      </Animated.View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  searchContainer: {
-    position: 'absolute',
-    top: 50,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-    zIndex: 10,
+  mapContainer: {
+    width: '100%',
+    position: 'relative',
   },
   searchBar: {
+    position: 'absolute',
+    top: 20,
+    left: 20,
+    right: 20,
+    height: 50,
+    backgroundColor: COLORS.background,
+    borderRadius: 25,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'white',
-    borderRadius: 30,
     paddingHorizontal: 15,
-    paddingVertical: 12,
-    width: '90%',
+    zIndex: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 5,
-    elevation: 4,
+    elevation: 5,
   },
   searchIcon: {
     marginRight: 10,
@@ -224,36 +364,23 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: SIZES.medium,
-    color: COLORS.text,
+    color: COLORS.textSecondary,
   },
   profilePic: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     overflow: 'hidden',
   },
   profileImage: {
     width: '100%',
     height: '100%',
   },
-  userLocationContainer: {
-    position: 'absolute',
-    bottom: '30%',
-    right: '45%',
-    zIndex: 2,
-  },
-  userLocationArrow: {
-    width: 0,
-    height: 0,
-    backgroundColor: 'transparent',
-    borderStyle: 'solid',
-    borderLeftWidth: 10,
-    borderRightWidth: 10,
-    borderBottomWidth: 20,
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
-    borderBottomColor: '#FF6B3F',
-    transform: [{ rotate: '180deg' }],
+  mapPlaceholder: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
   },
   bottomSheet: {
     position: 'absolute',
@@ -263,31 +390,43 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    paddingBottom: 20,
-    maxHeight: '50%',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 5,
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 15,
+    overflow: 'hidden',
   },
   bottomSheetHeader: {
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 15,
+    justifyContent: 'space-between',
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
   },
-  orangeIndicator: {
+  bottomSheetHandle: {
     width: 40,
-    height: 4,
-    backgroundColor: '#FF6B3F',
-    borderRadius: 2,
-  },
-  bottomSheetContent: {
-    padding: 20,
+    height: 5,
+    backgroundColor: '#D0D0D0',
+    borderRadius: 3,
+    marginRight: 10,
   },
   bottomSheetTitle: {
-    fontSize: SIZES.large,
-    fontWeight: 'bold',
-    marginBottom: 15,
+    flex: 1,
+    fontSize: SIZES.medium,
+    fontWeight: '700',
+    color: COLORS.text,
+    textAlign: 'center',
+  },
+  recentVisitContainer: {
+    padding: 15,
+  },
+  daysAgoText: {
+    fontSize: SIZES.small,
+    color: COLORS.textSecondary,
+    marginBottom: 10,
+    alignSelf: 'flex-end',
   },
   userInfoContainer: {
     flexDirection: 'row',
@@ -318,154 +457,89 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     marginLeft: 4,
   },
-  daysAgo: {
-    fontSize: SIZES.small,
-    color: COLORS.textSecondary,
-  },
   recentItem: {
     marginBottom: 20,
   },
   shopImageContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 8,
+    marginRight: 15,
+  },
+  shopImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 8,
+    resizeMode: 'cover',
+  },
+  shopImageLargeContainer: {
     width: '100%',
-    height: 180,
+    height: 200,
     borderRadius: 10,
     overflow: 'hidden',
     marginBottom: 10,
   },
-  shopImage: {
+  shopImageLarge: {
     width: '100%',
     height: '100%',
   },
-  shopInfoCard: {
+  actionsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  likeButton: {
+    padding: 5,
+  },
+  moreButton: {
+    padding: 5,
+  },
+  shopInfoCardLarge: {
     backgroundColor: COLORS.background,
     borderRadius: 10,
     padding: 15,
-    marginBottom: 10,
     borderWidth: 1,
     borderColor: COLORS.border,
   },
-  shopName: {
+  shopInfoContent: {
+    width: '100%',
+  },
+  shopNameLarge: {
     fontSize: SIZES.medium,
     fontWeight: '600',
+    color: COLORS.text,
     marginBottom: 5,
   },
-  shopDetails: {
+  shopDetailsRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  ratingText: {
+  ratingTextLarge: {
     fontSize: SIZES.small,
     fontWeight: '600',
-    marginRight: 2,
+    color: COLORS.text,
   },
-  shopType: {
+  starIcon: {
+    marginHorizontal: 2,
+  },
+  shopTypeLarge: {
     fontSize: SIZES.small,
     color: COLORS.textSecondary,
   },
-  shopDistance: {
+  shopDistanceLarge: {
+    fontSize: SIZES.small,
+    color: COLORS.textSecondary,
+  },
+  visitedText: {
     fontSize: SIZES.small,
     color: COLORS.textSecondary,
   },
   actionButtons: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 10,
+    alignItems: 'center',
   },
   actionButton: {
     padding: 5,
-  },
-  shopDetailsPanel: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: COLORS.background,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 10,
-  },
-  shopDetailsPanelHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  shopDetailsPanelTitle: {
-    fontSize: SIZES.large,
-    fontWeight: 'bold',
-    color: COLORS.text,
-  },
-  shopDetailsContent: {
-    marginBottom: 15,
-  },
-  shopDetailsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  shopRatingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f0f0f0',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 15,
-    marginRight: 10,
-  },
-  shopRatingText: {
-    fontSize: SIZES.medium,
-    fontWeight: 'bold',
-    color: '#FFB800',
-    marginRight: 3,
-  },
-  shopTypeText: {
-    fontSize: SIZES.medium,
-    color: COLORS.textSecondary,
-    marginRight: 10,
-  },
-  shopDistanceText: {
-    fontSize: SIZES.medium,
-    color: '#FF6B3F',
-  },
-  shopDetailsButtonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  shopDetailsButton: {
-    flex: 1,
-    backgroundColor: '#FF6B3F',
-    borderRadius: 10,
-    paddingVertical: 12,
-    marginHorizontal: 5,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  shopDetailsButtonText: {
-    color: COLORS.background,
-    marginLeft: 5,
-    fontWeight: '600',
-  },
-  logoutButton: {
-    position: 'absolute',
-    bottom: 20,
-    right: 20,
-    backgroundColor: '#FF6B3F',
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    alignItems: 'center',
-    justifyContent: 'center',
-    opacity: 0.2,
   },
 });
 

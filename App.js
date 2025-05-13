@@ -18,9 +18,9 @@ import {
   updateUserProfile
 } from './src/utils/authService';
 
-// Import navigators and screens
+// Import navigators
 import AuthNavigator from './src/navigation/AuthNavigator';
-import HomeScreen from './src/screens/HomeScreen';
+import MainNavigator from './src/navigation/MainNavigator';
 
 // Create authentication context
 export const AuthContext = createContext();
@@ -245,7 +245,7 @@ export default function App() {
               <StatusBar style="auto" />
               <Stack.Navigator screenOptions={{ headerShown: false }}>
                 {state.userToken ? (
-                  <Stack.Screen name="Home" component={HomeScreen} />
+                  <Stack.Screen name="Main" component={MainNavigator} />
                 ) : (
                   <Stack.Screen name="Auth" component={AuthNavigator} />
                 )}
