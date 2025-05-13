@@ -1,6 +1,7 @@
 import React, { useContext } from 'react';
 import { AuthContext } from '../../../App';
-import { View, Text, StyleSheet, SafeAreaView, Image } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, Image, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import Button from '../../components/Button';
 import { COLORS, SIZES } from '../../styles/theme';
 
@@ -9,8 +10,21 @@ const AccountCreatedScreen = ({ navigation, route }) => {
   
   // Get the auth functions from AuthContext
   const { user } = useContext(AuthContext);
+  
+  const handleContinue = () => {
+    // Navigate to Login screen
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Login' }],
+    });
+  };
+  
   return (
     <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Account Created</Text>
+      </View>
+      
       <View style={styles.content}>
         <View style={styles.successIconContainer}>
           <View style={styles.successIcon}>
@@ -24,11 +38,8 @@ const AccountCreatedScreen = ({ navigation, route }) => {
         </Text>
         
         <Button 
-          title="Continue to App" 
-          onPress={() => navigation.reset({
-            index: 0,
-            routes: [{ name: 'Home' }],
-          })}
+          title="Continue to Login" 
+          onPress={handleContinue}
           style={styles.button}
         />
       </View>
@@ -56,11 +67,28 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: SIZES.padding,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  headerTitle: {
+    flex: 1,
+    textAlign: 'center',
+    fontSize: SIZES.large,
+    fontWeight: '600',
+  },
   content: {
     flex: 1,
     padding: SIZES.padding * 2,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  button: {
+    marginTop: SIZES.padding * 2,
+    width: '100%',
   },
   successIconContainer: {
     width: 120,
@@ -99,6 +127,8 @@ const styles = StyleSheet.create({
     fontSize: SIZES.medium,
     color: COLORS.textSecondary,
     marginBottom: SIZES.padding * 3,
+    textAlign: 'center',
+    paddingHorizontal: SIZES.padding,
     textAlign: 'center',
   },
   button: {

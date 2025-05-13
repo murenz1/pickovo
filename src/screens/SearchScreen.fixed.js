@@ -327,77 +327,13 @@ const SearchScreen = () => {
             <Text style={styles.selectedShopName}>{selectedShop.name}</Text>
           </View>
           
-          {/* Shop Image and Details */}
+          {/* Shop Image */}
           <View style={styles.selectedShopImageContainer}>
             <Image 
               source={selectedShop.image} 
               style={styles.selectedShopImage}
               resizeMode="cover"
             />
-          </View>
-          
-          {/* Shop Details Card */}
-          <View style={styles.shopDetailsCard}>
-            <View style={styles.shopDetailsHeader}>
-              <View>
-                <Text style={styles.shopDetailsName}>{selectedShop.name}</Text>
-                <View style={styles.shopRatingContainer}>
-                  <Text style={styles.shopRating}>{selectedShop.rating}</Text>
-                  <View style={styles.starsContainer}>
-                    <Ionicons name="star" size={14} color="#FFD700" />
-                  </View>
-                  <Text style={styles.shopReviews}>({selectedShop.reviews})</Text>
-                </View>
-                <Text style={styles.shopDetailsHours}>{selectedShop.openHours}</Text>
-              </View>
-              <TouchableOpacity 
-                style={styles.bookServiceButton}
-                onPress={() => bookService(selectedShop)}
-              >
-                <Text style={styles.bookServiceButtonText}>Book Service</Text>
-              </TouchableOpacity>
-            </View>
-            
-            <View style={styles.shopDetailsContent}>
-              <Text style={styles.shopDetailsDescription}>{selectedShop.description}</Text>
-              <TouchableOpacity onPress={() => openWebsite(selectedShop.website)}>
-                <Text style={styles.shopDetailsWebsite}>{selectedShop.website}</Text>
-              </TouchableOpacity>
-            </View>
-            
-            {/* Action Buttons */}
-            <View style={styles.actionButtonsContainer}>
-              <TouchableOpacity style={styles.actionButton}>
-                <Ionicons name="navigate-outline" size={24} color={COLORS.primary} />
-                <Text style={styles.actionButtonText}>Direction</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.actionButton}>
-                <Ionicons name="construct-outline" size={24} color={COLORS.primary} />
-                <Text style={styles.actionButtonText}>Services</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.actionButton}>
-                <Ionicons name="call-outline" size={24} color={COLORS.primary} />
-                <Text style={styles.actionButtonText}>Call</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.actionButton}>
-                <Ionicons name="share-social-outline" size={24} color={COLORS.primary} />
-                <Text style={styles.actionButtonText}>Share</Text>
-              </TouchableOpacity>
-            </View>
-            
-            {/* Gallery */}
-            <View style={styles.galleryContainer}>
-              <Text style={styles.galleryTitle}>Gallery</Text>
-              <ScrollView 
-                horizontal 
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.galleryScrollContent}
-              >
-                <Image source={selectedShop.image} style={styles.galleryImage} />
-                <Image source={selectedShop.image} style={styles.galleryImage} />
-                <Image source={selectedShop.image} style={styles.galleryImage} />
-              </ScrollView>
-            </View>
           </View>
           
           {/* Popular Destinations */}
@@ -765,97 +701,6 @@ const styles = StyleSheet.create({
   selectedShopImage: {
     width: '100%',
     height: '100%',
-  },
-  shopDetailsCard: {
-    backgroundColor: COLORS.background,
-    borderRadius: 15,
-    marginHorizontal: 16,
-    marginTop: -30,
-    marginBottom: 16,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  shopDetailsHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 16,
-  },
-  shopDetailsName: {
-    fontSize: SIZES.medium,
-    fontWeight: 'bold',
-    color: COLORS.text,
-    marginBottom: 4,
-  },
-  shopDetailsHours: {
-    fontSize: SIZES.small,
-    color: COLORS.textSecondary,
-    marginTop: 4,
-  },
-  bookServiceButton: {
-    backgroundColor: COLORS.primary,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 8,
-  },
-  bookServiceButtonText: {
-    color: COLORS.background,
-    fontWeight: 'bold',
-    fontSize: SIZES.small,
-  },
-  shopDetailsContent: {
-    marginBottom: 16,
-  },
-  shopDetailsDescription: {
-    fontSize: SIZES.small,
-    color: COLORS.text,
-    marginBottom: 8,
-    lineHeight: 20,
-  },
-  shopDetailsWebsite: {
-    fontSize: SIZES.small,
-    color: COLORS.primary,
-    marginBottom: 16,
-  },
-  actionButtonsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 24,
-    paddingVertical: 16,
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: '#F0F0F0',
-  },
-  actionButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  actionButtonText: {
-    fontSize: 12,
-    color: COLORS.text,
-    marginTop: 4,
-  },
-  galleryContainer: {
-    marginBottom: 16,
-  },
-  galleryTitle: {
-    fontSize: SIZES.medium,
-    fontWeight: 'bold',
-    marginBottom: 12,
-    color: COLORS.text,
-  },
-  galleryScrollContent: {
-    paddingRight: 16,
-  },
-  galleryImage: {
-    width: 120,
-    height: 90,
-    borderRadius: 8,
-    marginRight: 8,
   },
 });
 

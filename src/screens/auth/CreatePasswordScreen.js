@@ -43,8 +43,12 @@ const CreatePasswordScreen = ({ navigation, route }) => {
       await signUp(email, password);
       
       // Navigate to account created screen
-      navigation.navigate('AccountCreated', { email });
+      console.log('Account created successfully, navigating to AccountCreated screen');
+      setTimeout(() => {
+        navigation.navigate('AccountCreated', { email });
+      }, 100); // Small delay to ensure navigation works properly
     } catch (err) {
+      console.error('Registration error:', err);
       setError(err.message || 'Failed to create account. Please try again.');
       Alert.alert('Registration Error', err.message || 'Failed to create account. Please try again.');
     } finally {
