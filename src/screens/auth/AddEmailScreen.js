@@ -38,8 +38,8 @@ const AddEmailScreen = ({ navigation }) => {
     // For now, we'll just proceed to the next step
     
     try {
-      // Navigate to the next screen with the email
-      navigation.navigate('CreatePassword', { email });
+      // Navigate to the verification screen with the email
+      navigation.navigate('VerifyEmail', { email });
     } catch (err) {
       setError(err.message || 'An error occurred. Please try again.');
     } finally {
