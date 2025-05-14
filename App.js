@@ -7,8 +7,11 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Provider as PaperProvider } from 'react-native-paper';
 
+// Import Firebase initialization - this must be imported first
+import './src/utils/firebaseInit';
+
 // Import Firebase auth
-import { auth } from './src/utils/firebase';
+import { auth } from './src/utils/firebaseInit';
 import { 
   onAuthStateChanged, 
   signInWithEmail, 
@@ -16,7 +19,7 @@ import {
   logoutUser,
   resetPassword,
   updateUserProfile
-} from './src/utils/authService';
+} from './src/utils/AuthService';
 
 // Import navigators
 import AuthNavigator from './src/navigation/AuthNavigator';

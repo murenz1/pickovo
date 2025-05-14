@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, TextInput, Aler
 import { Ionicons } from '@expo/vector-icons';
 import Button from '../../components/Button';
 import { COLORS, SIZES } from '../../styles/theme';
-import { sendEmailVerificationCode, verifyEmailCode } from '../../utils/authService';
+import { sendEmailVerificationCode, verifyEmailCode } from '../../utils/AuthService';
 import { AuthContext } from '../../../App';
 
 const VerifyEmailScreen = ({ navigation, route }) => {
