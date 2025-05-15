@@ -9,14 +9,39 @@ const AccountCreatedScreen = ({ navigation, route }) => {
   const { email } = route.params || {};
   
   // Get the auth functions from AuthContext
-  const { user } = useContext(AuthContext);
+  const { signIn } = useContext(AuthContext);
   
-  const handleContinue = () => {
-    // Navigate to Login screen
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'Login' }],
-    });
+  const handleContinue = async () => {
+    try {
+      // Since we're using a mock implementation, we need to sign in the user
+      // to trigger the auth state change that will navigate to the Main navigator
+      if (email) {
+        // Auto-login with the created account
+        await signIn(email, 'password'); // In mock mode, the password doesn't matter
+        
+        // The auth state change in App.js should automatically navigate to Main
+        // But we can also force it if needed:
+        /*
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Main' }],
+        });
+        */
+      } else {
+        // If no email, just go to login
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Login' }],
+        });
+      }
+    } catch (error) {
+      console.error('Error signing in after account creation:', error);
+      // Fallback to login screen
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Login' }],
+      });
+    }
   };
   
   return (

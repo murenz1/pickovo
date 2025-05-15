@@ -12,7 +12,8 @@ import {
   Animated,
   PanResponder,
   FlatList,
-  StatusBar
+  StatusBar,
+  Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
