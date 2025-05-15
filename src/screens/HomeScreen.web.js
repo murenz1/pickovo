@@ -130,9 +130,17 @@ const HomeScreen = () => {
   const [isBottomSheetExpanded, setIsBottomSheetExpanded] = useState(false);
   
   // Bottom sheet animation
-  const bottomSheetHeight = useRef(new Animated.Value(180)).current;
   const bottomSheetMinHeight = 180;
   const bottomSheetMaxHeight = screenHeight * 0.5;
+  
+  // Use translateY for all animations since height cannot be animated with native driver
+  const bottomSheetTranslateY = useRef(new Animated.Value(0)).current;
+  
+  // Calculate the current height based on translateY
+  const getBottomSheetHeight = () => {
+    // This is a derived value, not an animated value
+    return isBottomSheetExpanded ? bottomSheetMaxHeight : bottomSheetMinHeight;
+  };
   
   // Pan responder for bottom sheet
   const panResponder = useRef(
@@ -142,17 +150,19 @@ const HomeScreen = () => {
         if (isBottomSheetExpanded) {
           // If expanded, allow dragging down
           if (gestureState.dy > 0) {
-            const newHeight = bottomSheetMaxHeight - gestureState.dy;
-            if (newHeight >= bottomSheetMinHeight) {
-              bottomSheetHeight.setValue(newHeight);
+            // Convert height change to translateY (positive translateY means moving down)
+            const newTranslateY = gestureState.dy / (bottomSheetMaxHeight - bottomSheetMinHeight) * 20;
+            if (newTranslateY <= 20) { // 20 is our max translateY value
+              bottomSheetTranslateY.setValue(newTranslateY);
             }
           }
         } else {
           // If collapsed, allow dragging up
           if (gestureState.dy < 0) {
-            const newHeight = bottomSheetMinHeight - gestureState.dy;
-            if (newHeight <= bottomSheetMaxHeight) {
-              bottomSheetHeight.setValue(newHeight);
+            // Convert height change to translateY (negative translateY means moving up)
+            const newTranslateY = gestureState.dy / (bottomSheetMinHeight - bottomSheetMaxHeight) * 20;
+            if (newTranslateY >= -20) { // -20 is our min translateY value
+              bottomSheetTranslateY.setValue(newTranslateY);
             }
           }
         }
@@ -164,9 +174,11 @@ const HomeScreen = () => {
             toggleBottomSheet();
           } else {
             // Spring back to expanded state
-            Animated.spring(bottomSheetHeight, {
-              toValue: bottomSheetMaxHeight,
-              useNativeDriver: false,
+            Animated.spring(bottomSheetTranslateY, {
+              toValue: -20, // Fully expanded position
+              useNativeDriver: true,
+              friction: 8,
+              tension: 40
             }).start();
           }
         } else {
@@ -175,9 +187,11 @@ const HomeScreen = () => {
             toggleBottomSheet();
           } else {
             // Spring back to collapsed state
-            Animated.spring(bottomSheetHeight, {
-              toValue: bottomSheetMinHeight,
-              useNativeDriver: false,
+            Animated.spring(bottomSheetTranslateY, {
+              toValue: 0, // Default collapsed position
+              useNativeDriver: true,
+              friction: 8,
+              tension: 40
             }).start();
           }
         }
@@ -187,10 +201,15 @@ const HomeScreen = () => {
   
   // Function to toggle bottom sheet state
   const toggleBottomSheet = () => {
-    Animated.spring(bottomSheetHeight, {
-      toValue: isBottomSheetExpanded ? bottomSheetMinHeight : bottomSheetMaxHeight,
-      useNativeDriver: false,
+    // Only animate translateY with native driver
+    Animated.spring(bottomSheetTranslateY, {
+      toValue: isBottomSheetExpanded ? 0 : -20,
+      useNativeDriver: true,
+      friction: 8,
+      tension: 40
     }).start();
+    
+    // Update state after animation starts
     setIsBottomSheetExpanded(!isBottomSheetExpanded);
   };
   
@@ -238,7 +257,11 @@ const HomeScreen = () => {
       
       {/* Bottom Sheet */}
       <Animated.View 
-        style={[styles.bottomSheet, { height: bottomSheetHeight }]}
+        style={[
+          styles.bottomSheet, 
+          { height: getBottomSheetHeight() },
+          { transform: [{ translateY: bottomSheetTranslateY }] }
+        ]}
         {...panResponder.panHandlers}
       >
         <TouchableOpacity 

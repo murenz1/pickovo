@@ -60,6 +60,7 @@ const ShopDetailsScreen = () => {
   
   const [activeTab, setActiveTab] = useState('OVERVIEW');
   const tabs = ['OVERVIEW', 'SERVICES', 'REVIEWS', 'PHOTOS'];
+  const [isWritingReview, setIsWritingReview] = useState(false);
   
   // Function to call the shop
   const handleCall = () => {
@@ -79,6 +80,14 @@ const ShopDetailsScreen = () => {
   // Function to book a service
   const handleBookService = () => {
     // Book service functionality would be implemented here
+  };
+  
+  // Function to handle writing a review
+  const handleWriteReview = () => {
+    setIsWritingReview(true);
+    // In a real app, this would open a review form or navigate to a review screen
+    alert('Write a review functionality would open here');
+    setIsWritingReview(false);
   };
   
   // Render the Overview tab content
@@ -120,6 +129,17 @@ const ShopDetailsScreen = () => {
   // Render the Reviews tab content
   const renderReviewsTab = () => (
     <View style={styles.tabContent}>
+      <TouchableOpacity 
+        style={styles.writeReviewButton}
+        onPress={handleWriteReview}
+        disabled={isWritingReview}
+      >
+        <Ionicons name="create-outline" size={20} color="#FFFFFF" style={styles.writeReviewIcon} />
+        <Text style={styles.writeReviewText}>
+          {isWritingReview ? 'Submitting...' : 'Write a Review'}
+        </Text>
+      </TouchableOpacity>
+      
       <View style={styles.ratingOverview}>
         <View style={styles.ratingScoreContainer}>
           <Text style={styles.ratingScore}>4.0</Text>
@@ -197,10 +217,10 @@ const ShopDetailsScreen = () => {
   const renderPhotosTab = () => (
     <View style={styles.tabContent}>
       <View style={styles.photosGrid}>
-        <Image source={require('../assets/images/launch-screen.jpg')} style={styles.photoItem} />
-        <Image source={require('../assets/images/launch-screen.jpg')} style={styles.photoItem} />
-        <Image source={require('../assets/images/launch-screen.jpg')} style={styles.photoItem} />
-        <Image source={require('../assets/images/launch-screen.jpg')} style={styles.photoItem} />
+        <Image source={require('../assets/images/top.jpg')} style={styles.photoItem} />
+        <Image source={require('../assets/images/7431.jpg')} style={styles.photoItem} />
+        <Image source={require('../assets/images/top.jpg')} style={styles.photoItem} />
+        <Image source={require('../assets/images/7431.jpg')} style={styles.photoItem} />
       </View>
     </View>
   );
@@ -376,6 +396,27 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: COLORS.background,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  writeReviewButton: {
+    flexDirection: 'row',
+    backgroundColor: COLORS.primary,
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  writeReviewIcon: {
+    marginRight: 8,
+  },
+  writeReviewText: {
+    color: '#FFFFFF',
+    fontSize: SIZES.medium,
+    fontWeight: '600',
   },
   header: {
     flexDirection: 'row',

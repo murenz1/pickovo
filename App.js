@@ -19,7 +19,7 @@ import {
   logoutUser,
   resetPassword,
   updateUserProfile
-} from './src/utils/AuthService';
+} from './src/utils/authService';
 
 // Import navigators
 import AuthNavigator from './src/navigation/AuthNavigator';
@@ -96,7 +96,8 @@ export default function App() {
         dispatch({ type: 'CLEAR_ERROR' });
         
         const user = await signInWithEmail(email, password);
-        const token = await user.getIdToken();
+        // Check if getIdToken exists, otherwise use a fallback
+        const token = user.getIdToken ? await user.getIdToken() : `mock-token-${user.uid}`;
         
         dispatch({ 
           type: 'SIGN_IN', 
@@ -124,7 +125,8 @@ export default function App() {
           await updateUserProfile(displayName);
         }
         
-        const token = await user.getIdToken();
+        // Check if getIdToken exists, otherwise use a fallback
+        const token = user.getIdToken ? await user.getIdToken() : `mock-token-${user.uid}`;
         
         dispatch({ 
           type: 'SIGN_IN', 
@@ -189,7 +191,18 @@ export default function App() {
           console.log('Auth state changed:', user ? 'User signed in' : 'No user');
           if (user) {
             // User is signed in
-            const token = await user.getIdToken();
+            // Check if getIdToken exists (for mock implementation)
+            let token = 'mock-token';
+            try {
+              if (typeof user.getIdToken === 'function') {
+                token = await user.getIdToken();
+              } else if (user.uid) {
+                token = `mock-token-${user.uid}`;
+              }
+            } catch (tokenError) {
+              console.log('Error getting token:', tokenError);
+            }
+            
             dispatch({ 
               type: 'RESTORE_TOKEN', 
               token: token,

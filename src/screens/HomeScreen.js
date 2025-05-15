@@ -133,9 +133,17 @@ const HomeScreen = () => {
   const [isBottomSheetExpanded, setIsBottomSheetExpanded] = useState(false);
   
   // Bottom sheet animation
-  const bottomSheetHeight = useRef(new Animated.Value(180)).current;
   const bottomSheetMinHeight = 180;
-  const bottomSheetMaxHeight = screenHeight * 0.5;
+  const bottomSheetMaxHeight = screenHeight * 0.6;
+  
+  // Use translateY for all animations since height cannot be animated with native driver
+  const bottomSheetTranslateY = useRef(new Animated.Value(0)).current;
+  
+  // Calculate the current height based on translateY
+  const getBottomSheetHeight = () => {
+    // This is a derived value, not an animated value
+    return isBottomSheetExpanded ? bottomSheetMaxHeight : bottomSheetMinHeight;
+  };
   
   // Pan responder for bottom sheet
   const panResponder = useRef(
@@ -145,17 +153,19 @@ const HomeScreen = () => {
         if (isBottomSheetExpanded) {
           // If expanded, allow dragging down
           if (gestureState.dy > 0) {
-            const newHeight = bottomSheetMaxHeight - gestureState.dy;
-            if (newHeight >= bottomSheetMinHeight) {
-              bottomSheetHeight.setValue(newHeight);
+            // Convert height change to translateY (positive translateY means moving down)
+            const newTranslateY = gestureState.dy / (bottomSheetMaxHeight - bottomSheetMinHeight) * 20;
+            if (newTranslateY <= 20) { // 20 is our max translateY value
+              bottomSheetTranslateY.setValue(newTranslateY);
             }
           }
         } else {
           // If collapsed, allow dragging up
           if (gestureState.dy < 0) {
-            const newHeight = bottomSheetMinHeight - gestureState.dy;
-            if (newHeight <= bottomSheetMaxHeight) {
-              bottomSheetHeight.setValue(newHeight);
+            // Convert height change to translateY (negative translateY means moving up)
+            const newTranslateY = gestureState.dy / (bottomSheetMinHeight - bottomSheetMaxHeight) * 20;
+            if (newTranslateY >= -20) { // -20 is our min translateY value
+              bottomSheetTranslateY.setValue(newTranslateY);
             }
           }
         }
@@ -167,9 +177,11 @@ const HomeScreen = () => {
             toggleBottomSheet();
           } else {
             // Spring back to expanded state
-            Animated.spring(bottomSheetHeight, {
-              toValue: bottomSheetMaxHeight,
-              useNativeDriver: false,
+            Animated.spring(bottomSheetTranslateY, {
+              toValue: -20, // Fully expanded position
+              useNativeDriver: true,
+              friction: 8,
+              tension: 40
             }).start();
           }
         } else {
@@ -178,9 +190,11 @@ const HomeScreen = () => {
             toggleBottomSheet();
           } else {
             // Spring back to collapsed state
-            Animated.spring(bottomSheetHeight, {
-              toValue: bottomSheetMinHeight,
-              useNativeDriver: false,
+            Animated.spring(bottomSheetTranslateY, {
+              toValue: 0, // Default collapsed position
+              useNativeDriver: true,
+              friction: 8,
+              tension: 40
             }).start();
           }
         }
@@ -190,10 +204,15 @@ const HomeScreen = () => {
   
   // Function to toggle bottom sheet state
   const toggleBottomSheet = () => {
-    Animated.spring(bottomSheetHeight, {
-      toValue: isBottomSheetExpanded ? bottomSheetMinHeight : bottomSheetMaxHeight,
-      useNativeDriver: false,
+    // Only animate translateY with native driver
+    Animated.spring(bottomSheetTranslateY, {
+      toValue: isBottomSheetExpanded ? 0 : -20,
+      useNativeDriver: true,
+      friction: 8,
+      tension: 40
     }).start();
+    
+    // Update state after animation starts
     setIsBottomSheetExpanded(!isBottomSheetExpanded);
   };
   
@@ -247,35 +266,36 @@ const HomeScreen = () => {
       
       {/* Bottom Sheet */}
       <Animated.View 
-        style={[styles.bottomSheet, { height: bottomSheetHeight }]}
+        style={[
+          styles.bottomSheet, 
+          { height: getBottomSheetHeight() },
+          { transform: [{ translateY: bottomSheetTranslateY }] }
+        ]}
         {...panResponder.panHandlers}
       >
-        <TouchableOpacity 
-          style={styles.bottomSheetHeader}
-          onPress={toggleBottomSheet}
-          activeOpacity={0.8}
-        >
-          <View style={styles.bottomSheetHandle} />
-          <Text style={styles.bottomSheetTitle}>Recently Visited</Text>
-          <Ionicons 
-            name={isBottomSheetExpanded ? "chevron-down" : "chevron-up"} 
-            size={20} 
-            color={COLORS.textSecondary} 
-          />
-        </TouchableOpacity>
+        <View style={styles.bottomSheetHeader}>
+          <Text style={styles.bottomSheetTitle}>Bottom sheet</Text>
+        </View>
+        
+        <View style={styles.tabContainer}>
+          <Text style={styles.tabTitle}>Recently Visit</Text>
+          <View style={styles.tabIndicator} />
+        </View>
         
         {/* User Info */}
         <View style={styles.userInfoContainer}>
           <View style={styles.userInfo}>
             <Image 
-              source={require('../assets/images/launch-screen.jpg')} 
+              source={require('../assets/images/profile-pic.jpg')} 
               style={styles.userAvatar}
-              defaultSource={require('../assets/images/launch-screen.jpg')}
+              defaultSource={require('../assets/images/profile-pic.jpg')}
             />
             <View>
               <Text style={styles.userName}>Yvoon Benjamin</Text>
               <View style={styles.userReviews}>
-                <Ionicons name="star" size={14} color="#FFB800" />
+                <View style={styles.reviewBadge}>
+                  <Ionicons name="star" size={12} color="#FFFFFF" />
+                </View>
                 <Text style={styles.reviewText}>24 reviews in NY</Text>
               </View>
             </View>
@@ -284,8 +304,6 @@ const HomeScreen = () => {
         
         {/* Recently Visited Shop */}
         <View style={styles.recentVisitContainer}>
-          <Text style={styles.daysAgoText}>{recentlyVisited[0].daysAgo} days ago</Text>
-          
           {/* Shop Image */}
           <TouchableOpacity 
             style={styles.shopImageLargeContainer}
@@ -293,21 +311,25 @@ const HomeScreen = () => {
             activeOpacity={0.9}
           >
             <Image 
-              source={recentlyVisited[0].image} 
+              source={require('../assets/images/launch-screen.jpg')} 
               style={styles.shopImageLarge}
               resizeMode="cover"
             />
           </TouchableOpacity>
           
-          {/* Action Buttons */}
-          <View style={styles.actionsRow}>
-            <TouchableOpacity style={styles.likeButton}>
-              <Ionicons name="thumbs-up-outline" size={24} color={COLORS.primary} />
-            </TouchableOpacity>
+          <View style={styles.visitInfoRow}>
+            <Text style={styles.daysAgoText}>{recentlyVisited[0].daysAgo} days ago</Text>
             
-            <TouchableOpacity style={styles.moreButton}>
-              <Ionicons name="ellipsis-horizontal" size={24} color={COLORS.textSecondary} />
-            </TouchableOpacity>
+            {/* Action Buttons */}
+            <View style={styles.actionsRow}>
+              <TouchableOpacity style={styles.likeButton}>
+                <Ionicons name="thumbs-up-outline" size={24} color="#000" />
+              </TouchableOpacity>
+              
+              <TouchableOpacity style={styles.moreButton}>
+                <Ionicons name="ellipsis-vertical" size={24} color="#000" />
+              </TouchableOpacity>
+            </View>
           </View>
           
           {/* Shop Info Card */}
@@ -320,7 +342,7 @@ const HomeScreen = () => {
               <Text style={styles.shopNameLarge}>{recentlyVisited[0].name}</Text>
               <View style={styles.shopDetailsRow}>
                 <Text style={styles.ratingTextLarge}>{recentlyVisited[0].rating.toFixed(1)}</Text>
-                <Ionicons name="star" size={16} color="#FFB800" style={styles.starIcon} />
+                <Ionicons name="star" size={14} color="#FFB800" style={styles.starIcon} />
                 <Text style={styles.shopTypeLarge}> • {recentlyVisited[0].type}</Text>
                 <Text style={styles.shopDistanceLarge}> • {recentlyVisited[0].distance}</Text>
               </View>
@@ -401,39 +423,50 @@ const styles = StyleSheet.create({
   bottomSheetHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  bottomSheetHandle: {
-    width: 40,
-    height: 5,
-    backgroundColor: '#D0D0D0',
-    borderRadius: 3,
-    marginRight: 10,
+    justifyContent: 'center',
+    paddingTop: 16,
+    paddingBottom: 8,
   },
   bottomSheetTitle: {
-    flex: 1,
+    fontSize: SIZES.medium,
+    fontWeight: '600',
+    color: COLORS.text,
+  },
+  tabContainer: {
+    paddingTop: 8,
+    paddingBottom: 16,
+    alignItems: 'center',
+    position: 'relative',
+  },
+  tabTitle: {
     fontSize: SIZES.medium,
     fontWeight: '700',
     color: COLORS.text,
-    textAlign: 'center',
+    marginBottom: 8,
   },
+  tabIndicator: {
+    width: 40,
+    height: 4,
+    backgroundColor: '#FF5722',
+    borderRadius: 2,
+  },
+
   recentVisitContainer: {
     padding: 15,
+  },
+  visitInfoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginVertical: 10,
   },
   daysAgoText: {
     fontSize: SIZES.small,
     color: COLORS.textSecondary,
-    marginBottom: 10,
-    alignSelf: 'flex-end',
   },
   userInfoContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 15,
+    paddingHorizontal: 15,
+    paddingBottom: 15,
   },
   userInfo: {
     flexDirection: 'row',
@@ -448,15 +481,25 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: SIZES.medium,
     fontWeight: '600',
+    color: COLORS.text,
+    marginBottom: 2,
   },
   userReviews: {
     flexDirection: 'row',
     alignItems: 'center',
   },
+  reviewBadge: {
+    backgroundColor: '#4CAF50',
+    borderRadius: 4,
+    width: 18,
+    height: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 6,
+  },
   reviewText: {
     fontSize: SIZES.small,
     color: COLORS.textSecondary,
-    marginLeft: 4,
   },
   recentItem: {
     marginBottom: 20,
@@ -478,7 +521,6 @@ const styles = StyleSheet.create({
     height: 200,
     borderRadius: 10,
     overflow: 'hidden',
-    marginBottom: 10,
   },
   shopImageLarge: {
     width: '100%',
@@ -486,11 +528,11 @@ const styles = StyleSheet.create({
   },
   actionsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
+    alignItems: 'center',
   },
   likeButton: {
     padding: 5,
+    marginRight: 10,
   },
   moreButton: {
     padding: 5,
