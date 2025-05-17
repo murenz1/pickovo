@@ -1,0 +1,5 @@
+[info] 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss (C:\Users\muren\OneDrive\Desktop\pickovo\flutter_app\pickovo\lib\screens\insurance_loans_screen.dart:379:38)
+[info] 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss (C:\Users\muren\OneDrive\Desktop\pickovo\flutter_app\pickovo\lib\screens\insurance_loans_screen.dart:393:28)
+[info] 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss (C:\Users\muren\OneDrive\Desktop\pickovo\flutter_app\pickovo\lib\screens\insurance_loans_screen.dart:545:38)
+[info] 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss (C:\Users\muren\OneDrive\Desktop\pickovo\flutter_app\pickovo\lib\screens\insurance_loans_screen.dart:559:28)
+[info] 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss (C:\Users\muren\OneDrive\Desktop\pickovo\flutter_app\pickovo\lib\screens\request_repair_screen.dart:198:67)
