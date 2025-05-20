@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../models/repair.dart';
 import '../theme/app_theme.dart';
 import 'repair_details_screen.dart';
+import 'cancel_repair_screen.dart';
 
 class RepairsScreen extends StatefulWidget {
   const RepairsScreen({super.key});
@@ -12,6 +14,35 @@ class RepairsScreen extends StatefulWidget {
 
 class _RepairsScreenState extends State<RepairsScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  
+  // Method to handle phone calls safely
+  void _makePhoneCall(String phoneUrl) {
+    _launchPhoneUrl(phoneUrl);
+  }
+  
+  // Helper method to handle the async operation
+  Future<void> _launchPhoneUrl(String phoneUrl) async {
+    final uri = Uri.parse(phoneUrl);
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri);
+      } else {
+        _showErrorSnackBar('Could not launch phone dialer');
+      }
+    } catch (e) {
+      _showErrorSnackBar('Error: $e');
+    }
+  }
+  
+  // Helper method to show error messages
+  void _showErrorSnackBar(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+      ),
+    );
+  }
   
   @override
   void initState() {
@@ -230,7 +261,11 @@ class _RepairsScreenState extends State<RepairsScreen> with SingleTickerProvider
                           size: 16,
                         ),
                         onPressed: () {
-                          // Implement phone call
+                          // Launch phone dialer with shop's phone number
+                          final phoneNumber = repair.shop.phoneNumber;
+                          final phoneUrl = 'tel:$phoneNumber';
+                          
+                          _makePhoneCall(phoneUrl);
                         },
                       ),
                     ),
@@ -270,7 +305,7 @@ class _RepairsScreenState extends State<RepairsScreen> with SingleTickerProvider
               decoration: BoxDecoration(
                 color: Colors.grey[300],
                 image: const DecorationImage(
-                  image: AssetImage('assets/images/mechanic_working.jpg'),
+                  image: NetworkImage('https://picsum.photos/400/150?random=10'),
                   fit: BoxFit.cover,
                 ),
               ),
@@ -306,7 +341,13 @@ class _RepairsScreenState extends State<RepairsScreen> with SingleTickerProvider
                 Expanded(
                   child: TextButton(
                     onPressed: () {
-                      // Implement cancel request
+                      // Navigate to cancel repair screen
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => CancelRepairScreen(repair: repair),
+                        ),
+                      );
                     },
                     style: TextButton.styleFrom(
                       foregroundColor: Colors.red,

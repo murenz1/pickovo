@@ -30,16 +30,25 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _login() async {
+<<<<<<< HEAD
     // Validate form first
+=======
+    // Clear any previous error messages
+    setState(() {
+      _errorMessage = null;
+    });
+    
+    // Validate form inputs
+>>>>>>> 79b9d3921c9d57532f3053e656903c701533de8c
     if (!_formKey.currentState!.validate()) return;
 
     // Clear any previous errors and show loading
     setState(() {
       _isLoading = true;
-      _errorMessage = null;
     });
 
     try {
+<<<<<<< HEAD
       // Get the auth provider and set credentials
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       authProvider.setEmail(_emailController.text);
@@ -51,17 +60,39 @@ class _LoginScreenState extends State<LoginScreen> {
       // Handle the result
       if (success && mounted) {
         // Navigate to home screen on success
+=======
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      authProvider.setEmail(_emailController.text.trim());
+      authProvider.setPassword(_passwordController.text);
+
+      final success = await authProvider.login();
+
+      if (!mounted) return;
+      
+      setState(() {
+        _isLoading = false;
+      });
+
+      if (success) {
+        // Navigate to home screen on successful login
+>>>>>>> 79b9d3921c9d57532f3053e656903c701533de8c
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const HomeScreen()),
         );
+<<<<<<< HEAD
       } else if (mounted) {
         // Show error message from provider
+=======
+      } else {
+        // Display error message from the auth provider
+>>>>>>> 79b9d3921c9d57532f3053e656903c701533de8c
         setState(() {
           _errorMessage = authProvider.authModel.error;
         });
       }
     } catch (e) {
+<<<<<<< HEAD
       // Handle unexpected errors
       if (mounted) {
         setState(() {
@@ -75,6 +106,14 @@ class _LoginScreenState extends State<LoginScreen> {
           _isLoading = false;
         });
       }
+=======
+      if (!mounted) return;
+      
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'An unexpected error occurred. Please try again.';
+      });
+>>>>>>> 79b9d3921c9d57532f3053e656903c701533de8c
     }
   }
 
@@ -117,12 +156,19 @@ class _LoginScreenState extends State<LoginScreen> {
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
+                  autocorrect: false,
+                  enableSuggestions: true,
+                  textInputAction: TextInputAction.next,
                   decoration: AppTheme.inputDecoration(
                     hintText: 'example@example.com',
+                    prefixIcon: const Icon(Icons.email_outlined),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your email';
+                    }
+                    if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                      return 'Please enter a valid email address';
                     }
                     return null;
                   },
@@ -135,7 +181,14 @@ class _LoginScreenState extends State<LoginScreen> {
                 PasswordInput(
                   controller: _passwordController,
                   hintText: 'Enter password',
+                  textInputAction: TextInputAction.done,
                   onChanged: (_) {},
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your password';
+                    }
+                    return null;
+                  },
                 ),
                 
                 // Forgot password link

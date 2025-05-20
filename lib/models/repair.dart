@@ -1,4 +1,5 @@
-// No imports needed for this model file
+// Import the repair shop model which also contains the sample data function
+import 'repair_shop.dart';
 
 enum RepairStatus {
   scheduled,
@@ -62,6 +63,7 @@ class Repair {
   final int progressPercentage;
   final String? statusMessage;
   final DateTime? nextServiceDue;
+  final RepairShop shop; // Added shop property
 
   Repair({
     required this.id,
@@ -79,6 +81,7 @@ class Repair {
     required this.progressPercentage,
     this.statusMessage,
     this.nextServiceDue,
+    required this.shop, // Added shop parameter
   });
 }
 
@@ -101,6 +104,10 @@ List<Repair> getCurrentRepairs() {
     imageUrl: 'assets/images/mechanic2.jpg',
     isOnline: false,
   );
+  
+  // Get sample repair shops
+  final repairShops = getSampleRepairShops();
+  final autoFinit = repairShops.firstWhere((shop) => shop.name == 'Auto Finit');
 
   return [
     Repair(
@@ -130,6 +137,7 @@ List<Repair> getCurrentRepairs() {
       ],
       progressPercentage: 25,
       statusMessage: 'Mechanic on the way',
+      shop: autoFinit,
     ),
     Repair(
       id: 'r2',
@@ -158,6 +166,7 @@ List<Repair> getCurrentRepairs() {
       ],
       progressPercentage: 75,
       statusMessage: null,
+      shop: autoFinit,
     ),
   ];
 }
@@ -180,6 +189,11 @@ List<Repair> getHistoryRepairs() {
     imageUrl: 'assets/images/mechanic2.jpg',
     isOnline: false,
   );
+  
+  // Get sample repair shops
+  final repairShops = getSampleRepairShops();
+  final autoFinit = repairShops.firstWhere((shop) => shop.name == 'Auto Finit');
+  final kigaliMotors = repairShops.firstWhere((shop) => shop.name == 'Kigali Motors');
 
   return [
     Repair(
@@ -204,6 +218,7 @@ List<Repair> getHistoryRepairs() {
       ],
       progressPercentage: 100,
       nextServiceDue: DateTime(2025, 8, 5),
+      shop: autoFinit,
     ),
     Repair(
       id: 'h2',
@@ -227,6 +242,7 @@ List<Repair> getHistoryRepairs() {
       ],
       progressPercentage: 100,
       nextServiceDue: DateTime(2025, 10, 20),
+      shop: kigaliMotors,
     ),
   ];
 }

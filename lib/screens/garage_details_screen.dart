@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../models/repair_shop.dart';
 import '../models/review.dart';
+import '../models/repair.dart';
+import 'request_repair_screen.dart';
+import 'repairs_screen.dart';
 
 class GarageDetailsScreen extends StatefulWidget {
   final RepairShop garage;
@@ -175,7 +179,12 @@ class _GarageDetailsScreenState extends State<GarageDetailsScreen> with SingleTi
           Expanded(
             child: OutlinedButton.icon(
               onPressed: () {
-                // Handle call action
+                // Launch phone dialer with garage phone number
+                final Uri phoneUri = Uri(
+                  scheme: 'tel',
+                  path: '+250789123456', // Use actual phone number from garage data when available
+                );
+                launchUrl(phoneUri);
               },
               icon: const Icon(Icons.call, color: Colors.blue),
               label: const Text('Call'),
@@ -190,7 +199,23 @@ class _GarageDetailsScreenState extends State<GarageDetailsScreen> with SingleTi
           Expanded(
             child: OutlinedButton.icon(
               onPressed: () {
-                // Handle message action
+                // Navigate to message screen with the garage
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => RepairMessageScreen(
+                      mechanic: Mechanic(
+                        id: 'mech_${widget.garage.id}',
+                        name: widget.garage.name,
+                        specialization: widget.garage.specialties.isNotEmpty 
+                            ? widget.garage.specialties.first 
+                            : 'General Mechanic',
+                        rating: widget.garage.rating,
+                        isOnline: true,
+                      ),
+                    ),
+                  ),
+                );
               },
               icon: const Icon(Icons.message, color: Colors.blue),
               label: const Text('Message'),
@@ -205,7 +230,11 @@ class _GarageDetailsScreenState extends State<GarageDetailsScreen> with SingleTi
           Expanded(
             child: ElevatedButton.icon(
               onPressed: () {
-                // Handle book action
+                // Navigate to request repair screen
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const RequestRepairScreen()),
+                );
               },
               icon: const Icon(Icons.calendar_today, color: Colors.white),
               label: const Text('Book'),

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import 'insurance_application_screen.dart';
+import 'loan_application_screen.dart';
 
 class InsuranceLoansScreen extends StatefulWidget {
   const InsuranceLoansScreen({super.key});
@@ -508,7 +510,16 @@ class _InsuranceLoansScreenState extends State<InsuranceLoansScreen> with Single
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  // Apply for insurance
+                  // Navigate to insurance application screen
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => InsuranceApplicationScreen(
+                        insuranceType: title,
+                        price: price,
+                      ),
+                    ),
+                  );
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: color,
@@ -636,7 +647,18 @@ class _InsuranceLoansScreenState extends State<InsuranceLoansScreen> with Single
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  // Apply for loan
+                  // Navigate to loan application screen
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => LoanApplicationScreen(
+                        loanType: title,
+                        amount: amount,
+                        interest: interest,
+                        duration: duration,
+                      ),
+                    ),
+                  );
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: color,

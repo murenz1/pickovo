@@ -6,6 +6,8 @@ import '../utils/validators.dart';
 import '../widgets/auth_button.dart';
 import '../widgets/social_login_button.dart';
 import 'email_verification_screen.dart';
+import 'privacy_policy_screen.dart';
+import 'terms_service_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -174,12 +176,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       TextButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const TermsServiceScreen(),
+                            ),
+                          );
+                        },
                         child: const Text('Terms'),
                       ),
                       const Text('and', style: TextStyle(color: Colors.grey)),
                       TextButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const PrivacyPolicyScreen(),
+                            ),
+                          );
+                        },
                         child: const Text('Privacy Policy'),
                       ),
                     ],

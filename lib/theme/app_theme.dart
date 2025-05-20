@@ -24,11 +24,13 @@ class AppTheme {
   static InputDecoration inputDecoration({
     required String hintText,
     Widget? suffixIcon,
+    Widget? prefixIcon,
     String? errorText,
   }) {
     return InputDecoration(
       hintText: hintText,
       hintStyle: const TextStyle(color: textSecondary),
+      prefixIcon: prefixIcon,
       suffixIcon: suffixIcon,
       errorText: errorText,
       errorStyle: const TextStyle(color: errorColor),

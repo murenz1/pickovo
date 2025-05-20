@@ -56,21 +56,115 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<bool> login() async {
+<<<<<<< HEAD
     if (_authModel.email == null || _authModel.password == null) {
       _authModel = _authModel.copyWith(
         error: 'Email and password are required',
+=======
+    try {
+      // Validate inputs first
+      if (_authModel.email == null || _authModel.email!.isEmpty) {
+        _authModel = _authModel.copyWith(
+          error: 'Please enter your email address',
+          isAuthenticated: false,
+        );
+        notifyListeners();
+        return false;
+      }
+
+      if (_authModel.password == null || _authModel.password!.isEmpty) {
+        _authModel = _authModel.copyWith(
+          error: 'Please enter your password',
+          isAuthenticated: false,
+        );
+        notifyListeners();
+        return false;
+      }
+      
+      // Simulate API call to a backend service
+      await Future.delayed(const Duration(milliseconds: 800));
+      
+      // In a real app, this would be an API call to your authentication service
+      // For demo purposes, we'll accept any valid email format with a password
+      // that meets our validation requirements
+      final bool isValidEmail = RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(_authModel.email!);
+      final bool isValidPassword = validatePassword(_authModel.password!);
+      
+      if (isValidEmail && isValidPassword) {
+        _authModel = _authModel.copyWith(isAuthenticated: true, error: null);
+        notifyListeners();
+        return true;
+      } else {
+        _authModel = _authModel.copyWith(
+          error: 'Invalid email or password. Password must be at least 8 characters with a number and symbol.',
+          isAuthenticated: false,
+        );
+        notifyListeners();
+        return false;
+      }
+    } catch (e) {
+      _authModel = _authModel.copyWith(
+        error: 'An error occurred. Please try again.',
+>>>>>>> 79b9d3921c9d57532f3053e656903c701533de8c
         isAuthenticated: false,
       );
       _isLoading = false;
       notifyListeners();
       return false;
     }
+<<<<<<< HEAD
     
     // Validate email format
     final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
     if (!emailRegex.hasMatch(_authModel.email!)) {
       _authModel = _authModel.copyWith(
         error: 'Please enter a valid email address',
+=======
+  }
+
+  Future<bool> register() async {
+    try {
+      // Validate inputs first
+      if (_authModel.email == null || _authModel.email!.isEmpty) {
+        _authModel = _authModel.copyWith(
+          error: 'Please enter your email address',
+          isAuthenticated: false,
+        );
+        notifyListeners();
+        return false;
+      }
+
+      if (_authModel.password == null || !validatePassword(_authModel.password!)) {
+        _authModel = _authModel.copyWith(
+          error: 'Password must be at least 8 characters with a number and symbol',
+          isAuthenticated: false,
+        );
+        notifyListeners();
+        return false;
+      }
+      
+      // Simulate API call to a backend service
+      await Future.delayed(const Duration(milliseconds: 800));
+      
+      // In a real app, this would be an API call to your registration service
+      final bool isValidEmail = RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(_authModel.email!);
+      
+      if (isValidEmail) {
+        _authModel = _authModel.copyWith(isAuthenticated: true, error: null);
+        notifyListeners();
+        return true;
+      } else {
+        _authModel = _authModel.copyWith(
+          error: 'Please enter a valid email address',
+          isAuthenticated: false,
+        );
+        notifyListeners();
+        return false;
+      }
+    } catch (e) {
+      _authModel = _authModel.copyWith(
+        error: 'An error occurred during registration. Please try again.',
+>>>>>>> 79b9d3921c9d57532f3053e656903c701533de8c
         isAuthenticated: false,
       );
       _isLoading = false;
