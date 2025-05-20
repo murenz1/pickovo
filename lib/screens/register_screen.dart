@@ -19,8 +19,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
-  // This variable is used in the condition check in _createAccount method
-  String? _passwordError;
 
   @override
   void dispose() {
@@ -29,35 +27,51 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  void _createAccount() {
-    if (!_formKey.currentState!.validate() || _passwordError != null) return;
+  Future<void> _continueWithEmail() async {
+    if (!_formKey.currentState!.validate()) return;
 
     setState(() {
       _isLoading = true;
     });
 
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    authProvider.setEmail(_emailController.text);
-    authProvider.setPassword(_passwordController.text);
-
-    // For demo purposes, navigate to email verification screen
-    Future.delayed(const Duration(seconds: 1), () {
-      // Check if the widget is still mounted before updating state
-      if (!mounted) return;
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      authProvider.setEmail(_emailController.text);
       
-      setState(() {
-        _isLoading = false;
-      });
+      // Only validate the email in the first step
+      final isEmailValid = await authProvider.validateEmail();
       
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => EmailVerificationScreen(
-            email: _emailController.text,
+      if (isEmailValid && mounted) {
+        // Navigate to the next screen to collect more information
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => EmailVerificationScreen(
+              email: _emailController.text,
+            ),
           ),
-        ),
-      );
-    });
+        );
+      } else if (mounted) {
+        // Show error message from provider
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(authProvider.authModel.error ?? 'Invalid email')),
+        );
+      }
+    } catch (e) {
+      // Handle unexpected errors
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${e.toString()}')),
+        );
+      }
+    } finally {
+      // Always reset loading state
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -111,7 +125,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 // Continue with email button
                 AuthButton(
                   text: 'Continue with email',
-                  onPressed: _createAccount,
+                  onPressed: _continueWithEmail,
                   isLoading: _isLoading,
                 ),
                 

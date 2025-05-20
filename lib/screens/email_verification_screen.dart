@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
+import '../services/api_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/auth_button.dart';
 import 'create_password_screen.dart';
@@ -38,30 +41,54 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
     super.dispose();
   }
 
-  void _verifyEmail() {
+  void _verifyEmail() async {
     if (!_formKey.currentState!.validate()) return;
+
+    // Get the verification code from the text fields
+    final code = _controllers.map((controller) => controller.text).join();
+    if (code.length != 5) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter the complete 5-digit code')),
+      );
+      return;
+    }
 
     setState(() {
       _isLoading = true;
     });
 
-    // For demo purposes, simulate verification
-    Future.delayed(const Duration(seconds: 1), () {
-      // Check if the widget is still mounted before updating state
-      if (!mounted) return;
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final success = await authProvider.verifyEmail(code);
       
-      setState(() {
-        _isLoading = false;
-      });
-      
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => CreatePasswordScreen(email: widget.email),
-        ),
-      );
-    });
+      if (success && mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CreatePasswordScreen(email: widget.email),
+          ),
+        );
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(authProvider.authModel.error ?? 'Verification failed')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Verification error: ${e.toString()}')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
+  
+  // No bypass function needed as verification is working well
 
   void _onCodeChanged(String value, int index) {
     if (value.isNotEmpty) {
@@ -112,6 +139,31 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                   style: const TextStyle(
                     fontSize: 16,
                     color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                
+                // Display test verification code (for testing purposes only)
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.info_outline, size: 16, color: Colors.grey),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Test code: ${ApiService.testVerificationCode}',
+                        style: const TextStyle(
+                          fontFamily: 'monospace',
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -171,6 +223,8 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                     ],
                   ),
                 ),
+                
+                // No bypass button needed
 
                 const Spacer(),
 

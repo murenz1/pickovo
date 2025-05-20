@@ -30,32 +30,51 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _login() async {
+    // Validate form first
     if (!_formKey.currentState!.validate()) return;
 
+    // Clear any previous errors and show loading
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
 
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    authProvider.setEmail(_emailController.text);
-    authProvider.setPassword(_passwordController.text);
+    try {
+      // Get the auth provider and set credentials
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      authProvider.setEmail(_emailController.text);
+      authProvider.setPassword(_passwordController.text);
 
-    final success = await authProvider.login();
+      // Attempt login with real API
+      final success = await authProvider.login();
 
-    setState(() {
-      _isLoading = false;
-    });
-
-    if (success && mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
-      );
-    } else if (mounted) {
-      setState(() {
-        _errorMessage = authProvider.authModel.error;
-      });
+      // Handle the result
+      if (success && mounted) {
+        // Navigate to home screen on success
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+      } else if (mounted) {
+        // Show error message from provider
+        setState(() {
+          _errorMessage = authProvider.authModel.error;
+        });
+      }
+    } catch (e) {
+      // Handle unexpected errors
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Login failed: ${e.toString()}';
+        });
+      }
+    } finally {
+      // Always reset loading state
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 

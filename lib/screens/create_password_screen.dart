@@ -41,36 +41,62 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
     });
   }
   
-  void _createPassword() {
+  void _createPassword() async {
     if (!_formKey.currentState!.validate()) return;
     
     // Check if password meets all requirements
-    if (!_hasMinLength || !_hasNumber || !_hasSymbol) return;
+    if (!_hasMinLength || !_hasNumber || !_hasSymbol) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please ensure your password meets all requirements')),
+      );
+      return;
+    }
     
     setState(() {
       _isLoading = true;
     });
     
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    authProvider.setEmail(widget.email);
-    authProvider.setPassword(_passwordController.text);
-    
-    // For demo purposes, simulate registration
-    Future.delayed(const Duration(seconds: 1), () {
-      // Check if the widget is still mounted before updating state
-      if (!mounted) return;
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
       
-      setState(() {
-        _isLoading = false;
-      });
+      // Set user information for registration
+      authProvider.setEmail(widget.email);
+      authProvider.setPassword(_passwordController.text);
       
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const AccountCreatedScreen(),
-        ),
-      );
-    });
+      // Generate a default name from email if needed
+      if (authProvider.authModel.name == null || authProvider.authModel.name!.isEmpty) {
+        final nameFromEmail = widget.email.split('@')[0];
+        authProvider.setName(nameFromEmail);
+      }
+      
+      // Complete the registration process
+      final success = await authProvider.register();
+      
+      if (success && mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const AccountCreatedScreen(),
+          ),
+        );
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(authProvider.authModel.error ?? 'Registration failed')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Registration error: ${e.toString()}')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
   
   @override

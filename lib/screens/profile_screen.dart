@@ -1,13 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
 import 'account_settings_screen.dart';
 import 'my_vehicles_screen.dart';
 import 'notifications_screen.dart';
+import 'welcome_screen.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
   @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  bool _isLoading = false;
+
+  @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+    final user = authProvider.authModel;
     return Scaffold(
       body: Column(
         children: [
@@ -89,17 +101,17 @@ class ProfileScreen extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      const Text(
-                        'Kelly',
-                        style: TextStyle(
+                      Text(
+                        user.name ?? 'User',
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       const SizedBox(height: 4),
-                      const Text(
-                        'samuel@example.com',
+                      Text(
+                        user.email ?? 'email@example.com',
                         style: TextStyle(
                           color: Colors.white70,
                           fontSize: 16,
@@ -187,21 +199,42 @@ class ProfileScreen extends StatelessWidget {
                             child: const Text('Cancel'),
                           ),
                           TextButton(
-                            onPressed: () {
+                            onPressed: () async {
+                              setState(() {
+                                _isLoading = true;
+                              });
+                              
                               Navigator.pop(context); // Close the dialog
-                              // Navigate to welcome screen and clear navigation stack
-                              Navigator.pushNamedAndRemoveUntil(
-                                context,
-                                '/welcome',
-                                (route) => false,
-                              );
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Logged out successfully'),
-                                ),
-                              );
+                              
+                              // Show loading indicator
+                              final loadingOverlay = _showLoadingOverlay(context);
+                              
+                              // Perform logout
+                              await authProvider.logout();
+                              
+                              // Hide loading indicator
+                              loadingOverlay.remove();
+                              
+                              if (mounted) {
+                                // Store context in local variable to avoid using across async gap
+                                final currentContext = context;
+                                
+                                // Navigate to welcome screen and clear navigation stack
+                                Navigator.of(currentContext).pushAndRemoveUntil(
+                                  MaterialPageRoute(builder: (context) => const WelcomeScreen()),
+                                  (route) => false,
+                                );
+                                
+                                ScaffoldMessenger.of(currentContext).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Logged out successfully'),
+                                  ),
+                                );
+                              }
                             },
-                            child: const Text('Logout'),
+                            child: _isLoading 
+                              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                              : const Text('Logout'),
                           ),
                         ],
                       ),
@@ -268,6 +301,21 @@ class ProfileScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  // Helper method to show a loading overlay
+  OverlayEntry _showLoadingOverlay(BuildContext context) {
+    final overlay = OverlayEntry(
+      builder: (context) => Container(
+        color: Colors.black.withAlpha(128), // Using withAlpha instead of deprecated withOpacity
+        child: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      ),
+    );
+    
+    Overlay.of(context).insert(overlay);
+    return overlay;
   }
 
   Widget _buildMenuItem(
