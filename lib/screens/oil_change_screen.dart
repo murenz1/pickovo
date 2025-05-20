@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../models/vehicle.dart';
+import 'request_repair_screen.dart';
 
 class OilChangeScreen extends StatefulWidget {
   const OilChangeScreen({super.key});
@@ -528,39 +529,11 @@ class _OilChangeScreenState extends State<OilChangeScreen> {
                     height: 50,
                     child: ElevatedButton(
                       onPressed: () {
-                        // Validate form
-                        if (_selectedServiceType == null ||
-                            _selectedGarage == null ||
-                            _selectedDate == null ||
-                            _selectedTime == null ||
-                            _locationController.text.isEmpty ||
-                            _selectedVehicle == null) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Please fill in all fields'),
-                              backgroundColor: Colors.red,
-                            ),
-                          );
-                          return;
-                        }
-                        
-                        // Show success message
-                        showDialog(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text('Service Booked'),
-                            content: const Text(
-                              'Your oil change service has been booked successfully. You will receive a confirmation shortly.',
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                  Navigator.pop(context);
-                                },
-                                child: const Text('OK'),
-                              ),
-                            ],
+                        // Navigate to request repair screen with pre-filled information
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const RequestRepairScreen(),
                           ),
                         );
                       },

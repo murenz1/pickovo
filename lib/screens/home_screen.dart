@@ -233,86 +233,14 @@ class _HomeTabState extends State<HomeTab> {
       ),
     );
   }
-  
-  void _showFullscreenMap() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.6,
-        minChildSize: 0.3,
-        maxChildSize: 0.9,
-        builder: (context, scrollController) {
-          return Container(
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(16),
-                topRight: Radius.circular(16),
-              ),
-            ),
-            child: Column(
-              children: [
-                // Handle bar
-                Container(
-                  margin: const EdgeInsets.symmetric(vertical: 8),
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Nearby Garages',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                    ],
-                  ),
-                ),
-                // Expanded map
-                Expanded(
-                  child: FlutterMap(
-                    mapController: _mapController,
-                    options: MapOptions(
-                      initialCenter: _currentLocation,
-                      initialZoom: 14.0,
-                      interactionOptions: const InteractionOptions(
-                        flags: InteractiveFlag.all,
-                      ),
-                    ),
-                    children: [
-                      TileLayer(
-                        urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                        userAgentPackageName: 'com.example.pickovo',
-                        tileProvider: NetworkTileProvider(),
-                      ),
-                      MarkerLayer(markers: _markers),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
+
+  // Fullscreen map feature has been removed as per user request
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: Row(
           children: [
             Container(
@@ -428,19 +356,7 @@ class _HomeTabState extends State<HomeTab> {
                               ),
                             ),
                     ),
-                    // Fullscreen button
-                    Positioned(
-                      right: 16,
-                      top: 16,
-                      child: FloatingActionButton.small(
-                        heroTag: 'fullscreen_map',
-                        onPressed: () {
-                          _showFullscreenMap();
-                        },
-                        backgroundColor: Colors.white,
-                        child: const Icon(Icons.fullscreen, color: Colors.blue),
-                      ),
-                    ),
+                    // Fullscreen button removed as per user request
                     // Reload and zoom controls
                     Positioned(
                       right: 16,
@@ -770,23 +686,25 @@ class _HomeTabState extends State<HomeTab> {
       ),
       child: Row(
         children: [
-          // Garage image
-          Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              color: Colors.grey[300],
-              borderRadius: BorderRadius.circular(8),
-              image: shop.imageUrl != null && shop.imageUrl!.isNotEmpty
-                  ? DecorationImage(
-                      image: NetworkImage(shop.imageUrl!),
-                      fit: BoxFit.cover,
-                    )
+          // Garage image with improved styling
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              width: 70,
+              height: 70,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                image: shop.imageUrl != null && shop.imageUrl!.isNotEmpty
+                    ? DecorationImage(
+                        image: NetworkImage(shop.imageUrl!),
+                        fit: BoxFit.cover,
+                      )
+                    : null,
+              ),
+              child: shop.imageUrl == null || shop.imageUrl!.isEmpty
+                  ? const Icon(Icons.car_repair, size: 30, color: Colors.grey)
                   : null,
             ),
-            child: shop.imageUrl == null || shop.imageUrl!.isEmpty
-                ? const Icon(Icons.car_repair)
-                : null,
           ),
           const SizedBox(width: 12),
           // Garage details

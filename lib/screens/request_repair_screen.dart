@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../models/vehicle.dart';
+import 'add_vehicle_screen.dart';
 
 class RequestRepairScreen extends StatefulWidget {
   const RequestRepairScreen({super.key});
@@ -145,10 +146,9 @@ class _RequestRepairScreenState extends State<RequestRepairScreen> {
                     return GestureDetector(
                       onTap: () {
                         // Navigate to add vehicle screen
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Add vehicle functionality will be implemented soon'),
-                          ),
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const AddVehicleScreen()),
                         );
                       },
                       child: Container(

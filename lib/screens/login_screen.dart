@@ -30,31 +30,49 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _login() async {
+    // Clear any previous error messages
+    setState(() {
+      _errorMessage = null;
+    });
+    
+    // Validate form inputs
     if (!_formKey.currentState!.validate()) return;
 
     setState(() {
       _isLoading = true;
-      _errorMessage = null;
     });
 
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    authProvider.setEmail(_emailController.text);
-    authProvider.setPassword(_passwordController.text);
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      authProvider.setEmail(_emailController.text.trim());
+      authProvider.setPassword(_passwordController.text);
 
-    final success = await authProvider.login();
+      final success = await authProvider.login();
 
-    setState(() {
-      _isLoading = false;
-    });
-
-    if (success && mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
-      );
-    } else if (mounted) {
+      if (!mounted) return;
+      
       setState(() {
-        _errorMessage = authProvider.authModel.error;
+        _isLoading = false;
+      });
+
+      if (success) {
+        // Navigate to home screen on successful login
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+      } else {
+        // Display error message from the auth provider
+        setState(() {
+          _errorMessage = authProvider.authModel.error;
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'An unexpected error occurred. Please try again.';
       });
     }
   }
@@ -98,12 +116,19 @@ class _LoginScreenState extends State<LoginScreen> {
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
+                  autocorrect: false,
+                  enableSuggestions: true,
+                  textInputAction: TextInputAction.next,
                   decoration: AppTheme.inputDecoration(
                     hintText: 'example@example.com',
+                    prefixIcon: const Icon(Icons.email_outlined),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your email';
+                    }
+                    if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                      return 'Please enter a valid email address';
                     }
                     return null;
                   },
@@ -116,7 +141,14 @@ class _LoginScreenState extends State<LoginScreen> {
                 PasswordInput(
                   controller: _passwordController,
                   hintText: 'Enter password',
+                  textInputAction: TextInputAction.done,
                   onChanged: (_) {},
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your password';
+                    }
+                    return null;
+                  },
                 ),
                 
                 // Forgot password link

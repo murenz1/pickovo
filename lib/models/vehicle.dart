@@ -36,6 +36,15 @@ class Vehicle {
     this.color = '',
     this.maintenanceItems = const [],
   });
+  
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is Vehicle && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 // Sample data for vehicles

@@ -14,6 +14,7 @@ class RepairShop {
   final int reviewCount;
   final List<String> specialties;
   final bool isOpen;
+  final String phoneNumber; // Added phone number property
 
   RepairShop({
     required this.id,
@@ -29,6 +30,7 @@ class RepairShop {
     this.reviewCount = 0,
     this.specialties = const [],
     this.isOpen = true,
+    this.phoneNumber = '+250 786493820', // Default phone number
   });
 
   // Create a copy of this RepairShop with modified properties
@@ -46,6 +48,7 @@ class RepairShop {
     int? reviewCount,
     List<String>? specialties,
     bool? isOpen,
+    String? phoneNumber,
   }) {
     return RepairShop(
       id: id ?? this.id,
@@ -61,6 +64,7 @@ class RepairShop {
       reviewCount: reviewCount ?? this.reviewCount,
       specialties: specialties ?? this.specialties,
       isOpen: isOpen ?? this.isOpen,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
     );
   }
 }
@@ -75,13 +79,14 @@ List<RepairShop> getSampleRepairShops() {
       address: '123 Main St, Kigali',
       distance: 0.6,
       rating: 5.0,
-      imageUrl: 'https://images.unsplash.com/photo-1597766650016-9f622e64affa',
+      imageUrl: 'https://picsum.photos/200/300?random=1',
       isFavorite: true,
       services: ['Oil Change', 'Tire Service', 'Battery Replacement'],
       estimatedTime: '5 min',
       reviewCount: 124,
       specialties: ['German Cars', 'Japanese Cars', 'Electric Vehicles'],
       isOpen: true,
+      phoneNumber: '+250 788 123 456',
     ),
     RepairShop(
       id: '2',
@@ -90,12 +95,13 @@ List<RepairShop> getSampleRepairShops() {
       address: '456 Central Ave, Kigali',
       distance: 1.2,
       rating: 4.5,
-      imageUrl: 'https://images.unsplash.com/photo-1599256871679-6a3e7e036daa',
+      imageUrl: 'https://picsum.photos/200/300?random=2',
       services: ['Engine Repair', 'Brake Service', 'AC Repair'],
       estimatedTime: '10 min',
       reviewCount: 87,
       specialties: ['Luxury Cars', 'SUVs', 'Performance Tuning'],
       isOpen: true,
+      phoneNumber: '+250 788 234 567',
     ),
     RepairShop(
       id: '3',
@@ -104,12 +110,13 @@ List<RepairShop> getSampleRepairShops() {
       address: '789 Park Rd, Kigali',
       distance: 1.8,
       rating: 4.0,
-      imageUrl: 'https://images.unsplash.com/photo-1625047509248-ec889cbff17f',
+      imageUrl: 'https://picsum.photos/200/300?random=3',
       services: ['Transmission Repair', 'Electrical Systems', 'Diagnostics'],
       estimatedTime: '15 min',
       reviewCount: 56,
       specialties: ['Diagnostics', 'Electrical Systems', 'Engine Tuning'],
       isOpen: false,
+      phoneNumber: '+250 788 345 678',
     ),
     RepairShop(
       id: '4',
@@ -118,12 +125,13 @@ List<RepairShop> getSampleRepairShops() {
       address: '321 East St, Kigali',
       distance: 2.1,
       rating: 4.2,
-      imageUrl: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70',
+      imageUrl: 'https://picsum.photos/200/300?random=4',
       services: ['Oil Change', 'Wheel Alignment', 'Suspension Repair'],
       estimatedTime: '20 min',
       reviewCount: 42,
       specialties: ['Quick Service', 'Affordable Repairs', 'Suspension'],
       isOpen: true,
+      phoneNumber: '+250 788 456 789',
     ),
     RepairShop(
       id: '5',
@@ -132,12 +140,13 @@ List<RepairShop> getSampleRepairShops() {
       address: '654 West Blvd, Kigali',
       distance: 2.5,
       rating: 4.8,
-      imageUrl: 'https://images.unsplash.com/photo-1580273916550-e323be2ae537',
+      imageUrl: 'https://picsum.photos/200/300?random=5',
       services: ['Full Service', 'Body Work', 'Paint Job'],
       estimatedTime: '25 min',
       reviewCount: 98,
       specialties: ['Premium Service', 'Body Work', 'Detailing'],
       isOpen: true,
+      phoneNumber: '+250 788 567 890',
     ),
   ];
 }

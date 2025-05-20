@@ -17,18 +17,50 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<bool> login() async {
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 1));
-    
-    // For demo purposes, check if email and password match a test account
-    // In a real app, you would validate against a backend service
-    if (_authModel.email == 'sarah.jansen@gmail.com' && _authModel.password == 'Password123!') {
-      _authModel = _authModel.copyWith(isAuthenticated: true, error: null);
-      notifyListeners();
-      return true;
-    } else {
+    try {
+      // Validate inputs first
+      if (_authModel.email == null || _authModel.email!.isEmpty) {
+        _authModel = _authModel.copyWith(
+          error: 'Please enter your email address',
+          isAuthenticated: false,
+        );
+        notifyListeners();
+        return false;
+      }
+
+      if (_authModel.password == null || _authModel.password!.isEmpty) {
+        _authModel = _authModel.copyWith(
+          error: 'Please enter your password',
+          isAuthenticated: false,
+        );
+        notifyListeners();
+        return false;
+      }
+      
+      // Simulate API call to a backend service
+      await Future.delayed(const Duration(milliseconds: 800));
+      
+      // In a real app, this would be an API call to your authentication service
+      // For demo purposes, we'll accept any valid email format with a password
+      // that meets our validation requirements
+      final bool isValidEmail = RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(_authModel.email!);
+      final bool isValidPassword = validatePassword(_authModel.password!);
+      
+      if (isValidEmail && isValidPassword) {
+        _authModel = _authModel.copyWith(isAuthenticated: true, error: null);
+        notifyListeners();
+        return true;
+      } else {
+        _authModel = _authModel.copyWith(
+          error: 'Invalid email or password. Password must be at least 8 characters with a number and symbol.',
+          isAuthenticated: false,
+        );
+        notifyListeners();
+        return false;
+      }
+    } catch (e) {
       _authModel = _authModel.copyWith(
-        error: 'Oops! Email or password incorrect try another one.',
+        error: 'An error occurred. Please try again.',
         isAuthenticated: false,
       );
       notifyListeners();
@@ -37,18 +69,47 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<bool> register() async {
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 1));
-    
-    // For demo purposes, assume registration is successful
-    // In a real app, you would send data to a backend service
-    if (_authModel.email != null && _authModel.password != null) {
-      _authModel = _authModel.copyWith(isAuthenticated: true, error: null);
-      notifyListeners();
-      return true;
-    } else {
+    try {
+      // Validate inputs first
+      if (_authModel.email == null || _authModel.email!.isEmpty) {
+        _authModel = _authModel.copyWith(
+          error: 'Please enter your email address',
+          isAuthenticated: false,
+        );
+        notifyListeners();
+        return false;
+      }
+
+      if (_authModel.password == null || !validatePassword(_authModel.password!)) {
+        _authModel = _authModel.copyWith(
+          error: 'Password must be at least 8 characters with a number and symbol',
+          isAuthenticated: false,
+        );
+        notifyListeners();
+        return false;
+      }
+      
+      // Simulate API call to a backend service
+      await Future.delayed(const Duration(milliseconds: 800));
+      
+      // In a real app, this would be an API call to your registration service
+      final bool isValidEmail = RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(_authModel.email!);
+      
+      if (isValidEmail) {
+        _authModel = _authModel.copyWith(isAuthenticated: true, error: null);
+        notifyListeners();
+        return true;
+      } else {
+        _authModel = _authModel.copyWith(
+          error: 'Please enter a valid email address',
+          isAuthenticated: false,
+        );
+        notifyListeners();
+        return false;
+      }
+    } catch (e) {
       _authModel = _authModel.copyWith(
-        error: 'Registration failed. Please try again.',
+        error: 'An error occurred during registration. Please try again.',
         isAuthenticated: false,
       );
       notifyListeners();

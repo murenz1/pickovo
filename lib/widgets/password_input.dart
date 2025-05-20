@@ -6,6 +6,8 @@ class PasswordInput extends StatefulWidget {
   final String hintText;
   final String? errorText;
   final ValueChanged<String> onChanged;
+  final FormFieldValidator<String>? validator;
+  final TextInputAction textInputAction;
 
   const PasswordInput({
     super.key,
@@ -13,6 +15,8 @@ class PasswordInput extends StatefulWidget {
     required this.hintText,
     this.errorText,
     required this.onChanged,
+    this.validator,
+    this.textInputAction = TextInputAction.done,
   });
 
   @override
@@ -24,13 +28,18 @@ class _PasswordInputState extends State<PasswordInput> {
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
+    return TextFormField(
       controller: widget.controller,
       obscureText: _obscureText,
       onChanged: widget.onChanged,
+      validator: widget.validator,
+      textInputAction: widget.textInputAction,
+      autocorrect: false,
+      enableSuggestions: false,
       decoration: AppTheme.inputDecoration(
         hintText: widget.hintText,
         errorText: widget.errorText,
+        prefixIcon: const Icon(Icons.lock_outline),
         suffixIcon: IconButton(
           icon: Icon(
             _obscureText ? Icons.visibility_off : Icons.visibility,
