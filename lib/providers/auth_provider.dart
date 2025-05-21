@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/auth_model.dart';
 import '../services/api_service.dart';
 
@@ -6,6 +7,27 @@ class AuthProvider with ChangeNotifier {
   final ApiService _apiService = ApiService();
   AuthModel _authModel = AuthModel();
   bool _isLoading = false;
+
+  AuthProvider() {
+    _checkAuthStatus();
+  }
+
+  Future<void> _checkAuthStatus() async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+      
+      final isAuthenticated = await checkAuthStatus();
+      _authModel = _authModel.copyWith(isAuthenticated: isAuthenticated);
+      
+      _isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      _isLoading = false;
+      _authModel = _authModel.copyWith(error: 'Failed to check authentication status');
+      notifyListeners();
+    }
+  }
 
   AuthModel get authModel => _authModel;
   bool get isLoading => _isLoading;
@@ -56,11 +78,6 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<bool> login() async {
-<<<<<<< HEAD
-    if (_authModel.email == null || _authModel.password == null) {
-      _authModel = _authModel.copyWith(
-        error: 'Email and password are required',
-=======
     try {
       // Validate inputs first
       if (_authModel.email == null || _authModel.email!.isEmpty) {
@@ -80,146 +97,42 @@ class AuthProvider with ChangeNotifier {
         notifyListeners();
         return false;
       }
-      
-      // Simulate API call to a backend service
-      await Future.delayed(const Duration(milliseconds: 800));
-      
-      // In a real app, this would be an API call to your authentication service
-      // For demo purposes, we'll accept any valid email format with a password
-      // that meets our validation requirements
-      final bool isValidEmail = RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(_authModel.email!);
-      final bool isValidPassword = validatePassword(_authModel.password!);
-      
-      if (isValidEmail && isValidPassword) {
-        _authModel = _authModel.copyWith(isAuthenticated: true, error: null);
-        notifyListeners();
-        return true;
-      } else {
-        _authModel = _authModel.copyWith(
-          error: 'Invalid email or password. Password must be at least 8 characters with a number and symbol.',
-          isAuthenticated: false,
-        );
-        notifyListeners();
-        return false;
-      }
-    } catch (e) {
-      _authModel = _authModel.copyWith(
-        error: 'An error occurred. Please try again.',
->>>>>>> 79b9d3921c9d57532f3053e656903c701533de8c
-        isAuthenticated: false,
-      );
-      _isLoading = false;
-      notifyListeners();
-      return false;
-    }
-<<<<<<< HEAD
-    
-    // Validate email format
-    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-    if (!emailRegex.hasMatch(_authModel.email!)) {
-      _authModel = _authModel.copyWith(
-        error: 'Please enter a valid email address',
-=======
-  }
 
-  Future<bool> register() async {
-    try {
-      // Validate inputs first
-      if (_authModel.email == null || _authModel.email!.isEmpty) {
-        _authModel = _authModel.copyWith(
-          error: 'Please enter your email address',
-          isAuthenticated: false,
-        );
-        notifyListeners();
-        return false;
-      }
-
-      if (_authModel.password == null || !validatePassword(_authModel.password!)) {
-        _authModel = _authModel.copyWith(
-          error: 'Password must be at least 8 characters with a number and symbol',
-          isAuthenticated: false,
-        );
-        notifyListeners();
-        return false;
-      }
-      
-      // Simulate API call to a backend service
-      await Future.delayed(const Duration(milliseconds: 800));
-      
-      // In a real app, this would be an API call to your registration service
-      final bool isValidEmail = RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(_authModel.email!);
-      
-      if (isValidEmail) {
-        _authModel = _authModel.copyWith(isAuthenticated: true, error: null);
-        notifyListeners();
-        return true;
-      } else {
-        _authModel = _authModel.copyWith(
-          error: 'Please enter a valid email address',
-          isAuthenticated: false,
-        );
-        notifyListeners();
-        return false;
-      }
-    } catch (e) {
-      _authModel = _authModel.copyWith(
-        error: 'An error occurred during registration. Please try again.',
->>>>>>> 79b9d3921c9d57532f3053e656903c701533de8c
-        isAuthenticated: false,
-      );
-      _isLoading = false;
+      // Use real API service for login
+      _isLoading = true;
       notifyListeners();
-      return false;
-    }
-    
-    _isLoading = true;
-    notifyListeners();
-    
-    try {
-      final data = await _apiService.login(
-        _authModel.email!,
-        _authModel.password!,
-      );
-      
-      // Extract user data from response
-      String? name;
-      if (data['user'] != null) {
-        // Try to get name from different possible fields
-        name = data['user']['name'] ?? 
-               data['user']['first_name'] ?? 
-               _authModel.name;
-      }
+
+      final response = await _apiService.login(_authModel.email!, _authModel.password!);
       
       _authModel = _authModel.copyWith(
         isAuthenticated: true,
         error: null,
-        name: name,
+        email: response['user']['email'],
+        name: '${response['user']['first_name']} ${response['user']['last_name']}'
       );
+      
       _isLoading = false;
       notifyListeners();
       return true;
     } catch (e) {
-      // Provide more specific error messages based on the exception
-      String errorMessage;
-      
-      if (e.toString().contains('401') || e.toString().contains('incorrect')) {
-        errorMessage = 'Incorrect email or password. Please try again.';
-      } else if (e.toString().contains('Network error')) {
-        errorMessage = 'Network error. Please check your internet connection and try again.';
-      } else if (e.toString().contains('timeout')) {
-        errorMessage = 'Connection timeout. The server is taking too long to respond.';
-      } else {
-        errorMessage = 'Login failed. Please try again later.';
-      }
-      
-      _authModel = _authModel.copyWith(
-        error: errorMessage,
-        isAuthenticated: false,
-      );
       _isLoading = false;
+      _authModel = _authModel.copyWith(
+        isAuthenticated: false,
+        error: e.toString()
+      );
       notifyListeners();
       return false;
     }
+  }
+
+  // Password validation helper
+  bool validatePassword(String password) {
+    // Password requirements: 8+ chars, at least 1 number, 1 symbol
+    bool hasMinLength = password.length >= 8;
+    bool hasNumber = password.contains(RegExp(r'[0-9]'));
+    bool hasSymbol = password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'));
+    
+    return hasMinLength && hasNumber && hasSymbol;
   }
 
   // Check if email is valid for registration (first step)  
@@ -251,7 +164,7 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
     return true;
   }
-  
+
   // Complete registration with all required fields
   Future<bool> register() async {
     if (_authModel.email == null || _authModel.password == null || _authModel.name == null) {
@@ -264,22 +177,10 @@ class AuthProvider with ChangeNotifier {
       return false;
     }
     
-    // Validate email format
-    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-    if (!emailRegex.hasMatch(_authModel.email!)) {
+    // Validate password strength using the validatePassword helper
+    if (!validatePassword(_authModel.password!)) {
       _authModel = _authModel.copyWith(
-        error: 'Please enter a valid email address',
-        isAuthenticated: false,
-      );
-      _isLoading = false;
-      notifyListeners();
-      return false;
-    }
-    
-    // Validate password strength
-    if (_authModel.password!.length < 6) {
-      _authModel = _authModel.copyWith(
-        error: 'Password must be at least 6 characters',
+        error: 'Password must be at least 8 characters with a number and symbol',
         isAuthenticated: false,
       );
       _isLoading = false;
@@ -350,15 +251,6 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  bool validatePassword(String password) {
-    // Password requirements: 8+ chars, at least 1 number, 1 symbol
-    bool hasMinLength = password.length >= 8;
-    bool hasNumber = password.contains(RegExp(r'[0-9]'));
-    bool hasSymbol = password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'));
-    
-    return hasMinLength && hasNumber && hasSymbol;
-  }
-  
   // Verify email with verification code
   Future<bool> verifyEmail(String code) async {
     if (_authModel.email == null) {

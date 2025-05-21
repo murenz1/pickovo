@@ -74,87 +74,76 @@ class ApiService {
   // Login
   Future<Map<String, dynamic>> login(String email, String password) async {
     try {
-      _log('Attempting login for email: $email'); // Debug log
+      _log('Attempting login for email: $email');
       
-      // For testing purposes, use a fixed test account
-      // This will bypass the actual API call and always succeed
-      if (email == 'test@example.com' && password == 'password123') {
-        _log('Using test account login'); // Debug log
-        
-        // Create a mock successful response
-        final mockData = {
-          'user': {
-            'id': 'test-user-id',
-            'email': email,
-            'first_name': 'Test',
-            'last_name': 'User',
-          },
-          'session': {
-            'access_token': 'mock-access-token',
-            'refresh_token': 'mock-refresh-token',
-          }
-        };
-        
-        // Store the mock tokens
-        await storeTokens(
-          mockData['session']!['access_token'] as String,
-          mockData['session']!['refresh_token'] as String,
-        );
-        
-        return mockData;
-      }
-      
-      // Real API call for non-test accounts
-      _log('Making API request to $baseUrl/api/auth/login'); // Debug log
+      // First try real API login
       final response = await http.post(
         Uri.parse('$baseUrl/api/auth/login'),
         headers: await getHeaders(requireAuth: false),
-        body: jsonEncode({
-          'email': email,
-          'password': password,
-        }),
+        body: jsonEncode({'email': email, 'password': password}),
       ).timeout(const Duration(seconds: 15));
       
-      _log('Login response status: ${response.statusCode}'); // Debug log
-      _log('Login response body: ${response.body}'); // Debug log
-      
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        final session = data['session'] as Map<String, dynamic>?;
         
-        // Store tokens
-        if (data['session'] != null) {
-          await storeTokens(
-            data['session']['access_token'],
-            data['session']['refresh_token'],
-          );
-          _log('Tokens stored successfully'); // Debug log
-        } else {
-          _log('No session data in response'); // Debug log
+        if (session == null) {
+          throw Exception('Invalid response format: missing session data');
         }
         
+        final accessToken = session['access_token'] as String?;
+        final refreshToken = session['refresh_token'] as String?;
+        
+        if (accessToken == null || refreshToken == null) {
+          throw Exception('Invalid response format: missing access token or refresh token');
+        }
+        
+        await storeTokens(accessToken, refreshToken);
         return data;
+      } else if (response.statusCode == 401) {
+        // If real login fails with 401 (unauthorized), try test account
+        _log('Real login failed, trying test account');
+        
+        if (email == 'test@example.com' && password == 'password123') {
+          _log('Using test account login');
+          
+          // Create a mock successful response
+          final mockData = {
+            'user': {
+              'id': 'test-user-id',
+              'email': email,
+              'first_name': 'Test',
+              'last_name': 'User',
+            },
+            'session': {
+              'access_token': 'mock-access-token',
+              'refresh_token': 'mock-refresh-token',
+            }
+          };
+          
+          // Store the mock tokens
+          final session = mockData['session'] as Map<String, dynamic>;
+          final accessToken = session['access_token'] as String;
+          final refreshToken = session['refresh_token'] as String;
+          
+          await storeTokens(accessToken, refreshToken);
+          
+          return mockData;
+        } else {
+          throw Exception('Invalid credentials');
+        }
       } else {
-        final errorData = jsonDecode(response.body);
-        final errorMessage = errorData['error'] ?? 'Login failed';
-        _log('Login error: $errorMessage'); // Debug log
-        throw Exception(errorMessage);
+        throw Exception('Login failed: ${response.body}');
       }
     } on SocketException {
-      const errorMessage = 'Network error: Please check your internet connection';
-      _log(errorMessage); // Debug log
-      throw Exception(errorMessage);
-    } on http.ClientException catch (e) {
-      final errorMessage = 'Connection error: Unable to reach the server. ${e.message}';
-      _log(errorMessage); // Debug log
-      throw Exception(errorMessage);
-    } on FormatException catch (e) {
-      final errorMessage = 'Error: Invalid response from server. ${e.message}';
-      _log(errorMessage); // Debug log
-      throw Exception(errorMessage);
+      throw Exception('Network error: Please check your internet connection');
+    } on http.ClientException {
+      throw Exception('Connection error: Unable to reach the server');
+    } on FormatException {
+      throw Exception('Error: Invalid response from server');
     } catch (e) {
-      final errorMessage = 'Login failed: ${e.toString()}';
-      _log(errorMessage); // Debug log
-      throw Exception(errorMessage);
+      _log('Login error: $e');
+      throw Exception('Login failed: ${e.toString()}');
     }
   }
   
@@ -165,6 +154,8 @@ class ApiService {
       List<String> nameParts = name.trim().split(' ');
       String firstName = nameParts[0];
       String lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
+      
+      _log('Attempting registration for email: $email');
       
       final response = await http.post(
         Uri.parse('$baseUrl/api/auth/register'),
@@ -178,7 +169,7 @@ class ApiService {
       ).timeout(const Duration(seconds: 15));
       
       if (response.statusCode == 201) {
-        final data = jsonDecode(response.body);
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
         
         // After successful registration, automatically login
         try {
@@ -186,11 +177,16 @@ class ApiService {
           return loginData;
         } catch (e) {
           // If auto-login fails, still return registration data
+          _log('Auto-login failed after registration: $e');
           return data;
         }
       } else {
-        final errorData = jsonDecode(response.body);
-        throw Exception(errorData['error'] ?? 'Registration failed');
+        final errorData = jsonDecode(response.body) as Map<String, dynamic>?;
+        final errorMessage = errorData?['error'] ?? 
+            errorData?['message'] ?? 
+            'Registration failed: ${response.statusCode}';
+        
+        throw Exception(errorMessage);
       }
     } on SocketException {
       throw Exception('Network error: Please check your internet connection');
@@ -199,9 +195,7 @@ class ApiService {
     } on FormatException {
       throw Exception('Error: Invalid response from server');
     } catch (e) {
-      if (e is Exception) {
-        rethrow;
-      }
+      _log('Registration error: $e');
       throw Exception('Registration failed: ${e.toString()}');
     }
   }

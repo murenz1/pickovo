@@ -206,31 +206,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               
                               Navigator.pop(context); // Close the dialog
                               
-                              // Show loading indicator
-                              final loadingOverlay = _showLoadingOverlay(context);
+                              // Store current context before async operation
+                              final currentContext = context;
                               
                               // Perform logout
                               await authProvider.logout();
                               
-                              // Hide loading indicator
-                              loadingOverlay.remove();
+                              if (!mounted) return;
                               
-                              if (mounted) {
-                                // Store context in local variable to avoid using across async gap
-                                final currentContext = context;
-                                
-                                // Navigate to welcome screen and clear navigation stack
-                                Navigator.of(currentContext).pushAndRemoveUntil(
-                                  MaterialPageRoute(builder: (context) => const WelcomeScreen()),
-                                  (route) => false,
-                                );
-                                
-                                ScaffoldMessenger.of(currentContext).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Logged out successfully'),
-                                  ),
-                                );
-                              }
+                              // Use stored context for navigation
+                              Navigator.of(currentContext).pushAndRemoveUntil(
+                                MaterialPageRoute(builder: (context) => const WelcomeScreen()),
+                                (route) => false,
+                              );
+                              
+                              // Use stored context for SnackBar
+                              ScaffoldMessenger.of(currentContext).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Logged out successfully'),
+                                ),
+                              );
                             },
                             child: _isLoading 
                               ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
@@ -303,20 +298,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // Helper method to show a loading overlay
-  OverlayEntry _showLoadingOverlay(BuildContext context) {
-    final overlay = OverlayEntry(
-      builder: (context) => Container(
-        color: Colors.black.withAlpha(128), // Using withAlpha instead of deprecated withOpacity
-        child: const Center(
-          child: CircularProgressIndicator(),
-        ),
-      ),
-    );
-    
-    Overlay.of(context).insert(overlay);
-    return overlay;
-  }
+
 
   Widget _buildMenuItem(
     BuildContext context, {

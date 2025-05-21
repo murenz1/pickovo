@@ -30,90 +30,50 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _login() async {
-<<<<<<< HEAD
     // Validate form first
-=======
-    // Clear any previous error messages
-    setState(() {
-      _errorMessage = null;
-    });
-    
-    // Validate form inputs
->>>>>>> 79b9d3921c9d57532f3053e656903c701533de8c
     if (!_formKey.currentState!.validate()) return;
 
     // Clear any previous errors and show loading
     setState(() {
       _isLoading = true;
+      _errorMessage = null;
     });
 
     try {
-<<<<<<< HEAD
       // Get the auth provider and set credentials
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      authProvider.setEmail(_emailController.text);
+      authProvider.setEmail(_emailController.text.trim());
       authProvider.setPassword(_passwordController.text);
 
       // Attempt login with real API
       final success = await authProvider.login();
 
-      // Handle the result
-      if (success && mounted) {
-        // Navigate to home screen on success
-=======
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      authProvider.setEmail(_emailController.text.trim());
-      authProvider.setPassword(_passwordController.text);
-
-      final success = await authProvider.login();
-
       if (!mounted) return;
-      
-      setState(() {
-        _isLoading = false;
-      });
 
       if (success) {
         // Navigate to home screen on successful login
->>>>>>> 79b9d3921c9d57532f3053e656903c701533de8c
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const HomeScreen()),
         );
-<<<<<<< HEAD
-      } else if (mounted) {
-        // Show error message from provider
-=======
       } else {
-        // Display error message from the auth provider
->>>>>>> 79b9d3921c9d57532f3053e656903c701533de8c
+        // Show error message from provider
         setState(() {
           _errorMessage = authProvider.authModel.error;
         });
       }
     } catch (e) {
-<<<<<<< HEAD
-      // Handle unexpected errors
       if (mounted) {
         setState(() {
           _errorMessage = 'Login failed: ${e.toString()}';
         });
       }
     } finally {
-      // Always reset loading state
       if (mounted) {
         setState(() {
           _isLoading = false;
         });
       }
-=======
-      if (!mounted) return;
-      
-      setState(() {
-        _isLoading = false;
-        _errorMessage = 'An unexpected error occurred. Please try again.';
-      });
->>>>>>> 79b9d3921c9d57532f3053e656903c701533de8c
     }
   }
 

@@ -24,8 +24,6 @@ class AuthModel {
       email: email ?? this.email,
       password: password ?? this.password,
       name: name ?? this.name,
-      phone: phone ?? this.phone,
-      address: address ?? this.address,
       isAuthenticated: isAuthenticated ?? this.isAuthenticated,
       error: error,
     );
