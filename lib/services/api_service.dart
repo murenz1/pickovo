@@ -209,10 +209,72 @@ class ApiService {
       ).timeout(const Duration(seconds: 10));
       
       if (response.statusCode == 200) {
-        return jsonDecode(response.body);
+        final data = jsonDecode(response.body);
+        // Ensure we return the user data in the correct format
+        if (data is Map<String, dynamic> && 
+            data.containsKey('id') && 
+            data.containsKey('profile')) {
+          final profile = data['profile'] as Map<String, dynamic>;
+          return {
+            'user': {
+              'id': data['id'],
+              'email': data['email'],
+              'first_name': profile['first_name'] ?? '',
+              'last_name': profile['last_name'] ?? '',
+            }
+          };
+        } else {
+          throw Exception('Invalid user data format from server');
+        }
+      } else if (response.statusCode == 401) {
+        // If unauthorized, clear tokens and throw appropriate error
+        await clearTokens();
+        throw Exception('Session expired. Please login again.');
+      } else if (response.statusCode == 404 || 
+                 response.statusCode == 500) {
+        // If user not found or profile creation failed
+        final errorData = jsonDecode(response.body) as Map<String, dynamic>;
+        final code = errorData['code'] as String?;
+        
+        if (code == 'PGRST116') {
+          // If profile doesn't exist, try to create it
+          try {
+            final token = await getToken();
+            if (token != null) {
+              // Try to create the profile
+              final response = await http.post(
+                Uri.parse('$baseUrl/api/auth/update-profile'),
+                headers: await getHeaders(),
+                body: jsonEncode({
+                  'first_name': 'New',
+                  'last_name': 'User',
+                  'phone_number': ''
+                }),
+              );
+              
+              if (response.statusCode == 200) {
+                // Profile created successfully, try getting it again
+                return getUserProfile();
+              }
+            }
+          } catch (e) {
+            _log('Failed to create profile: $e');
+          }
+          
+          throw Exception('User profile not found. Please register or login again.');
+        }
+        
+        throw Exception('Failed to get user profile: ${errorData['message'] ?? errorData['error'] ?? response.body}');
       } else {
-        throw Exception('Failed to get user profile: ${response.body}');
+        final errorData = jsonDecode(response.body) as Map<String, dynamic>;
+        throw Exception('Failed to get user profile: ${errorData['message'] ?? errorData['error'] ?? response.body}');
       }
+    } on SocketException {
+      throw Exception('Network error: Please check your internet connection');
+    } on TimeoutException {
+      throw Exception('Request timed out. Please try again.');
+    } on FormatException {
+      throw Exception('Invalid response format from server');
     } catch (e) {
       throw Exception('Failed to get user profile: ${e.toString()}');
     }

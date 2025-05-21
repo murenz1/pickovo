@@ -104,11 +104,14 @@ class AuthProvider with ChangeNotifier {
 
       final response = await _apiService.login(_authModel.email!, _authModel.password!);
       
+      // Extract user data from response
+      final userData = response['user'] as Map<String, dynamic>;
+      
       _authModel = _authModel.copyWith(
         isAuthenticated: true,
         error: null,
-        email: response['user']['email'],
-        name: '${response['user']['first_name']} ${response['user']['last_name']}'
+        email: userData['email'],
+        name: '${userData['first_name'] ?? ''} ${userData['last_name'] ?? ''}'.trim()
       );
       
       _isLoading = false;
